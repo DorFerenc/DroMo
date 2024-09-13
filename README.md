@@ -23,3 +23,35 @@ These instructions will help you set up and run the project on your local machin
 ### Test
 
 1. run: ```docker compose run test pytest```
+
+# DEV:
+
+### API Chart
+
+### Structure
+```
+dromo/
+│
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── video.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   └── video_service.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py
+│   └── db/
+│       ├── __init__.py
+│       └── mongodb.py
+├── tests/
+│   ├── __init__.py
+│   └── test_api.py
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── run.py
+```
