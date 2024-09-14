@@ -9,11 +9,12 @@ import os
 api_bp = Blueprint('api', __name__)
 video_service = VideoService()
 
-@api_bp.route('/', methods=['GET'])
-def home():
-    return jsonify({"message": "Welcome to the DROMO API"}), 200
+# @api_bp.route('/', methods=['GET'])
+# def home():
+#     return jsonify({"message": "Welcome to the DROMO API"}), 200
 
-@api_bp.route('/api/upload', methods=['POST'])
+# @api_bp.route('/api/upload', methods=['POST'])
+@api_bp.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_visual_data():
     """
     Handle the upload of visual data.
@@ -25,6 +26,9 @@ def upload_visual_data():
     Returns:
         JSON response with upload status and video ID.
     """
+    if request.method == 'OPTIONS':
+        return '', 200
+
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
 
