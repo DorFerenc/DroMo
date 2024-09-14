@@ -1,6 +1,9 @@
 """Service layer for video-related operations."""
 
 from app.models.video import Video
+from bson import ObjectId
+from bson.errors import InvalidId
+from app.db.mongodb import get_db
 
 class VideoService:
     """Handles business logic for video operations."""
@@ -31,4 +34,24 @@ class VideoService:
         Returns:
             dict: The video data if found, None otherwise.
         """
-        return Video.get_by_id(video_id)
+        try:
+            return Video.get_by_id(video_id)
+        except InvalidId:
+            return None
+        # return Video.get_by_id(video_id)
+
+    @staticmethod
+    def get_all_videos():
+        """Retrieve all videos."""
+        db = get_db()
+        return list(db.videos.find())
+
+    @staticmethod
+    def delete_video(video_id):
+        """Delete a video by its ID."""
+        try:
+            db = get_db()
+            result = db.videos.delete_one({'_id': ObjectId(video_id)})
+            return result.deleted_count > 0
+        except InvalidId:
+            return False

@@ -71,7 +71,28 @@ def get_video(video_id):
             'id': str(video['_id']),
             'title': video['title'],
             'file_path': video['file_path'],
-            'timestamp': video['timestamp'].isoformat()
+            'timestamp': video['timestamp'] #.isoformat()
         }), 200
     else:
-        return jsonify({'error': 'Video not found'}), 404
+        return jsonify({'error': 'Video not found or invalid ID'}), 404
+
+
+@api_bp.route('/api/videos', methods=['GET'])
+def list_videos():
+    """List all videos."""
+    videos = video_service.get_all_videos()
+    return jsonify([{
+        'id': str(video['_id']),
+        'title': video['title'],
+        'timestamp': video['timestamp'] # .isoformat()
+    } for video in videos]), 200
+
+
+@api_bp.route('/api/videos/<video_id>', methods=['DELETE'])
+def delete_video(video_id):
+    """Delete a specific video."""
+    result = video_service.delete_video(video_id)
+    if result:
+        return jsonify({'message': 'Video deleted successfully'}), 200
+    else:
+        return jsonify({'error': 'Video not found or invalid ID'}), 404

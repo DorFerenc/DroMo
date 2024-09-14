@@ -18,7 +18,6 @@ def app():
     app = create_app()
     app.config.update({
         'TESTING': True,
-        # 'MONGODB_URI': 'mongodb://localhost:27017/dromo_test'
         'MONGODB_URI': 'mongodb://mongo:27017/dromo_test'
     })
     yield app
@@ -156,3 +155,105 @@ def test_video_retrieval(client, mongo):
     assert video_data['title'] == 'Retrieval Test Video'
     assert 'file_path' in video_data
     assert 'timestamp' in video_data
+
+def test_list_videos(client, mongo):
+    """
+    Scenario: List all videos
+        Given there are videos in the database
+        When I request the list of videos
+        Then I should receive a list of all videos
+    """
+    # Add some test videos to the database
+    mongo.videos.insert_many([
+        {'title': 'Video 1', 'file_path': '/path/to/video1.mp4', 'timestamp': '2024-09-14T10:00:00'},
+        {'title': 'Video 2', 'file_path': '/path/to/video2.mp4', 'timestamp': '2024-09-14T11:00:00'}
+    ])
+
+    response = client.get('/api/videos')
+    assert response.status_code == 200
+
+    videos = json.loads(response.data.decode('utf-8'))
+    assert len(videos) == 2
+    assert videos[0]['title'] == 'Video 1'
+    assert videos[1]['title'] == 'Video 2'
+    assert 'timestamp' in videos[0]
+    assert 'timestamp' in videos[1]
+
+def test_get_video_details(client, mongo):
+    """
+    Scenario: Get video details
+        Given there is a video in the database
+        When I request the details of that video
+        Then I should receive the correct video information
+    """
+    video = mongo.videos.insert_one({
+        'title': 'Test Video',
+        'file_path': '/path/to/test_video.mp4',
+        'timestamp': '2024-09-14T12:00:00'
+    })
+
+    response = client.get(f'/api/videos/{str(video.inserted_id)}')
+    assert response.status_code == 200
+
+    video_data = json.loads(response.data.decode('utf-8'))
+    assert video_data['title'] == 'Test Video'
+    assert video_data['file_path'] == '/path/to/test_video.mp4'
+    assert video_data['timestamp'] == '2024-09-14T12:00:00'
+
+def test_get_nonexistent_video(client):
+    """
+    Scenario: Get details of a non-existent video
+        Given there is no video with a specific ID in the database
+        When I request the details of that video
+        Then I should receive a 404 error
+    """
+    nonexistent_id = str(ObjectId())
+    response = client.get(f'/api/videos/{nonexistent_id}')
+    assert response.status_code == 404
+
+def test_delete_video(client, mongo):
+    """
+    Scenario: Delete a video
+        Given there is a video in the database
+        When I request to delete that video
+        Then the video should be removed from the database
+    """
+    video = mongo.videos.insert_one({
+        'title': 'Video to Delete',
+        'file_path': '/path/to/delete_video.mp4',
+        'timestamp': '2024-09-14T13:00:00'
+    })
+
+    response = client.delete(f'/api/videos/{str(video.inserted_id)}')
+    assert response.status_code == 200
+
+    # Check that the video was actually deleted
+    assert mongo.videos.find_one({'_id': video.inserted_id}) is None
+
+
+def test_delete_nonexistent_video(client):
+    """
+    Scenario: Delete a non-existent video
+        Given there is no video with a specific ID in the database
+        When I request to delete that video
+        Then I should receive a 404 error
+    """
+    nonexistent_id = str(ObjectId())
+    response = client.delete(f'/api/videos/{nonexistent_id}')
+    assert response.status_code == 404
+
+def test_invalid_video_id(client):
+    """
+    Scenario: Use an invalid video ID
+        Given an invalid video ID is provided
+        When I request to get or delete a video
+        Then I should receive a 404 error
+    """
+    invalid_id = 'invalid_id'
+    get_response = client.get(f'/api/videos/{invalid_id}')
+    assert get_response.status_code == 404
+    assert json.loads(get_response.data)['error'] == 'Video not found or invalid ID'
+
+    delete_response = client.delete(f'/api/videos/{invalid_id}')
+    assert delete_response.status_code == 404
+    assert json.loads(delete_response.data)['error'] == 'Video not found or invalid ID'

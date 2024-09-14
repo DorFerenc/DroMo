@@ -15,6 +15,14 @@ These instructions will help you set up and run the project on your local machin
 ### Installation
 
 1. Clone the repository:
+2. Add a `.env` file in root project with this info:
+```
+FLASK_APP=run.py
+FLASK_ENV=development
+MONGODB_URI=mongodb://localhost:27017/dromo
+SECRET_KEY=your-secret-key-here
+UPLOAD_FOLDER=/app/uploads
+```
 2. Open MongoDB and Docker
 3. ```docker compose build```
 4. ```docker compose up```
