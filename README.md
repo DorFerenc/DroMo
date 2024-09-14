@@ -75,3 +75,16 @@ dromo/
 ├── requirements.txt
 └── run.py
 ```
+
+### Check in docker mongo
+1. Open Docker Desktop on your Windows machine.
+2. In the Docker Desktop interface, go to the "Containers" tab.
+3. Find the container running your MongoDB instance. It should be named something like "dromo-mongo-1" or similar, based on your docker-compose configuration.
+4. Click on the container name to open its details.
+5. In the container details view, click on the "Terminal" tab.
+6. In the command input field, type `mongosh` and press Enter. This will open a MongoDB shell inside the container.
+Once in the MongoDB shell, type the following commands:
+```
+use dromo
+db.videos.find()
+```
