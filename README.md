@@ -73,16 +73,19 @@ dromo/
 │   ├── api/
 │   │   ├── __init__.py
 │   │   └── routes.py
-│   └── db/
-│       ├── __init__.py
-│       └── mongodb.py
+│   ├── db/
+│   │   └── __init__.py
+│   │   └── mongodb.py
+│   └── static
+│       └── index.html
 ├── tests/
 │   ├── __init__.py
 │   └── test_api.py
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
-└── run.py
+├── run.py
+└── uploads
 ```
 
 ### Check in docker mongo
