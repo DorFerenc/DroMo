@@ -35,18 +35,27 @@ UPLOAD_FOLDER=/app/uploads
 # DEV:
 
 ### API Endpoint Chart
+### API Endpoint Chart
+
 | Resource | Address | Method | Parameters | Responses | Status Codes |
 | -------- | ------- | ------ | ---------- | --------- | ------------ |
 | Upload Visual Data | `/api/upload` | POST | - `title`: String<br>- `file`: Multipart Video | - `message`: Upload success<br>- `video_id`: MongoDB ID | 200, 400, 500 |
 | List all videos | `/api/videos` | GET | None | Array of video objects | 200, 500 |
 | Get video details | `/api/videos/<id>` | GET | - `id`: String (Video ID) | Video object | 200, 404, 500 |
 | Delete a video | `/api/videos/<id>` | DELETE | - `id`: String (Video ID) | - `message`: Deletion success | 200, 404, 500 |
-| Monitor Progress | `/api/progress/<id>` | GET | - `id`: String (Video ID) | - `video_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| Preprocess Visual Data | `/api/preprocess/<id>` | POST | - `id`: String (Video ID) | - `message`: Preprocessing started<br>- `preprocessed_data_id`: String | 200, 404, 500 |
-| Monitor Preprocessing Progress | `/api/preprocess/progress/<id>` | GET | - `id`: String (Preprocessed Data ID) | - `preprocessed_data_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| Reconstruct 3D Model | `/api/reconstruct/<id>` | POST | - `id`: String (Preprocessed Data ID) | - `message`: Reconstruction started<br>- `model_id`: String | 200, 404, 500 |
+| Monitor Video Processing Progress | `/api/progress/<id>` | GET | - `id`: String (Video ID) | - `video_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
+| Preprocess Video to Point Cloud | `/api/preprocess/<id>` | POST | - `id`: String (Video ID) | - `message`: Preprocessing started<br>- `point_cloud_id`: String | 200, 404, 500 |
+| Monitor Preprocessing Progress | `/api/preprocess/progress/<id>` | GET | - `id`: String (Point Cloud ID) | - `point_cloud_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
+| List all Point Cloud Data | `/api/pointclouds` | GET | None | Array of point cloud objects | 200, 500 |
+| Get Point Cloud details | `/api/pointclouds/<id>` | GET | - `id`: String (Point Cloud ID) | Point cloud object | 200, 404, 500 |
+| Delete a Point Cloud | `/api/pointclouds/<id>` | DELETE | - `id`: String (Point Cloud ID) | - `message`: Deletion success | 200, 404, 500 |
+| Reconstruct 3D Model | `/api/reconstruct/<id>` | POST | - `id`: String (Point Cloud ID) | - `message`: Reconstruction started<br>- `model_id`: String | 200, 404, 500 |
 | Monitor Reconstruction Progress | `/api/reconstruct/progress/<id>` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| Export 3D Model | `/api/export/<id>` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `file_path`: String<br>- `metadata`: Object | 200, 404, 500 |
+| List all 3D Models | `/api/models` | GET | None | Array of 3D model objects | 200, 500 |
+| Get 3D Model details | `/api/models/<id>` | GET | - `id`: String (Model ID) | 3D model object | 200, 404, 500 |
+| Display 3D Model | `/api/models/<id>/display` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `display_data`: Object | 200, 404, 500 |
+| Export 3D Model | `/api/models/<id>/export` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `file_path`: String<br>- `metadata`: Object | 200, 404, 500 |
+| Delete a 3D Model | `/api/models/<id>` | DELETE | - `id`: String (Model ID) | - `message`: Deletion success | 200, 404, 500 |
 
 ### Structure
 ```
