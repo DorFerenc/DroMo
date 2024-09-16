@@ -11,3 +11,8 @@ class Config:
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
     ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload size
+
+    # YOLO model configuration
+    YOLO_WEIGHTS = os.environ.get('YOLO_WEIGHTS', 'app/preprocess/yolov3/yolov3.weights')
+    YOLO_CONFIG = os.environ.get('YOLO_CONFIG', 'app/preprocess/yolov3/yolov3.cfg')
+    COCO_NAMES = os.environ.get('COCO_NAMES', 'app/preprocess/yolov3/coco.names')

@@ -100,3 +100,21 @@ def delete_video(video_id):
         return jsonify({'message': 'Video deleted successfully'}), 200
     else:
         return jsonify({'error': 'Video not found or invalid ID'}), 404
+
+@api_bp.route('/api/preprocess/<video_id>', methods=['POST'])
+def process_video(video_id):
+    """PreProcess the video"""
+    result = video_service.process_video(video_id)
+    if result:
+        return jsonify(result), 200
+    else:
+        return jsonify({'error': 'Video not found or invalid ID'}), 404
+
+@api_bp.route('/api/preprocess/progress/<video_id>', methods=['GET'])
+def process_video(video_id):
+    """PreProcess the video"""
+    result = video_service.get_progress(video_id)
+    if result:
+        return jsonify(result), 200
+    else:
+        return jsonify({'error': 'Video not found or invalid ID'}), 404
