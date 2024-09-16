@@ -35,7 +35,6 @@ UPLOAD_FOLDER=/app/uploads
 # DEV:
 
 ### API Endpoint Chart
-### API Endpoint Chart
 
 | Resource | Address | Method | Parameters | Responses | Status Codes |
 | -------- | ------- | ------ | ---------- | --------- | ------------ |
@@ -46,9 +45,10 @@ UPLOAD_FOLDER=/app/uploads
 | Monitor Video Processing Progress | `/api/progress/<id>` | GET | - `id`: String (Video ID) | - `video_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
 | Preprocess Video to Point Cloud | `/api/preprocess/<id>` | POST | - `id`: String (Video ID) | - `message`: Preprocessing started<br>- `point_cloud_id`: String | 200, 404, 500 |
 | Monitor Preprocessing Progress | `/api/preprocess/progress/<id>` | GET | - `id`: String (Point Cloud ID) | - `point_cloud_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| List all Point Cloud Data | `/api/pointclouds` | GET | None | Array of point cloud objects | 200, 500 |
-| Get Point Cloud details | `/api/pointclouds/<id>` | GET | - `id`: String (Point Cloud ID) | Point cloud object | 200, 404, 500 |
-| Delete a Point Cloud | `/api/pointclouds/<id>` | DELETE | - `id`: String (Point Cloud ID) | - `message`: Deletion success | 200, 404, 500 |
+| Upload Point Cloud | `/api/point_clouds` | POST | - `name`: String<br>- `file`: Multipart File (.txt or .csv) | - `message`: Upload success<br>- `point_cloud_id`: MongoDB ID | 200, 400, 500 |
+| List all Point Clouds | `/api/point_clouds` | GET | None | Array of point cloud objects | 200, 500 |
+| Get Point Cloud details | `/api/point_clouds/<id>` | GET | - `id`: String (Point Cloud ID) | Point cloud object | 200, 400, 404 |
+| Delete a Point Cloud | `/api/point_clouds/<id>` | DELETE | - `id`: String (Point Cloud ID) | - `message`: Deletion success | 200, 400, 404 |
 | Reconstruct 3D Model | `/api/reconstruct/<id>` | POST | - `id`: String (Point Cloud ID) | - `message`: Reconstruction started<br>- `model_id`: String | 200, 404, 500 |
 | Monitor Reconstruction Progress | `/api/reconstruct/progress/<id>` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
 | List all 3D Models | `/api/models` | GET | None | Array of 3D model objects | 200, 500 |
@@ -59,34 +59,59 @@ UPLOAD_FOLDER=/app/uploads
 
 ### Structure
 ```
-dromo/
-│
-├── app/
+Dromo_Structure/
+├── app
 │   ├── __init__.py
 │   ├── config.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── video.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   └── video_service.py
-│   ├── api/
+│   ├── api
 │   │   ├── __init__.py
 │   │   └── routes.py
-│   ├── db/
-│   │   └── __init__.py
+│   ├── db
+│   │   ├── __init__.py
 │   │   └── mongodb.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   ├── point_cloud.py
+│   │   └── video.py
+│   ├── reconstruction
+│   │   ├── __init__.py
+│   │   ├── mesh_to_obj_converter.py
+│   │   ├── point_cloud_to_mesh.py
+│   │   └── texture_mapper.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── reconstruction_service.py
+│   │   └── video_service.py
 │   └── static
 │       └── index.html
-├── tests/
-│   ├── __init__.py
-│   └── test_api.py
 ├── Dockerfile
+├── README.md
 ├── docker-compose.yml
 ├── requirements.txt
 ├── run.py
+├── tests
+│   ├── __init__.py
+│   ├── test_api.py
+│   └── test_point_cloud.py
 └── uploads
+    └── test_video.mp4
 ```
+
+### 🚀 Build smarter, not harder! → Upgrade docker speed
+To supercharge your Docker builds with faster performance and advanced optimizations, you can enable Docker BuildKit in PowerShell. Here’s how to unlock this feature:
+
+First, activate BuildKit for your current session by running:
+```
+$env:DOCKER_BUILDKIT=1
+```
+Then, kick off your Docker build like a pro:
+```
+docker compose build
+```
+Want BuildKit always at your fingertips? Add DOCKER_BUILDKIT=1 to your system’s environment variables to ensure your builds are lightning fast—every single time you open a terminal.
+
+
+
 
 ### Check in docker mongo
 1. Open Docker Desktop on your Windows machine.
@@ -98,5 +123,7 @@ dromo/
 Once in the MongoDB shell, type the following commands:
 ```
 use dromo
+show collections
 db.videos.find()
+db.point_clouds.find()
 ```
