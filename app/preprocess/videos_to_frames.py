@@ -9,7 +9,7 @@ class FrameExtractor:
         # Load YOLO model
         self.net = cv2.dnn.readNet(Config.YOLO_WEIGHTS, Config.YOLO_CONFIG)
         self.layer_names = self.net.getLayerNames()
-        self.output_layers = [self.layer_names[i - 1] for i in self.net.getUnconnectedOutLayers()]
+        self.output_layers = [self.layer_names[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
 
         # Load COCO dataset labels for YOLO
         with open(Config.COCO_NAMES, 'r') as f:

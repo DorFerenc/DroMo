@@ -111,7 +111,7 @@ def process_video(video_id):
         return jsonify({'error': 'Video not found or invalid ID'}), 404
 
 @api_bp.route('/api/preprocess/progress/<video_id>', methods=['GET'])
-def process_video(video_id):
+def progress_process_video(video_id):
     """PreProcess the video"""
     result = video_service.get_progress(video_id)
     if result:
