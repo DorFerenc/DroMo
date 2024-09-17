@@ -62,10 +62,10 @@ UPLOAD_FOLDER=/app/uploads
 Dromo_Structure/
 ├── app
 │   ├── __init__.py
+│   ├── config.py
 │   ├── api
 │   │   ├── __init__.py
 │   │   └── routes.py
-│   ├── config.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   └── mongodb.py
