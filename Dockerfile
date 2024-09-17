@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     build-essential \
     libopencv-dev \
-    wget \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
@@ -24,6 +24,10 @@ COPY . /app
 # RUN wget -O /app/app/yolov3/yolov3.weights https://pjreddie.com/media/files/yolov3.weights
 # RUN wget -O /app/app/yolov3/yolov3.cfg https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg
 # RUN wget -O /app/app/yolov3/coco.names https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
+# Download YOLO weights, config, and COCO dataset labels
+RUN curl -o /app/yolov3.weights https://pjreddie.com/media/files/yolov3.weights
+RUN curl -o /app/yolov3.cfg https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg
+RUN curl -o /app/coco.names https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names
 
 
 # Install any needed packages specified in requirements.txt

@@ -13,9 +13,13 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload size
 
     # YOLO model configuration
-    YOLO_WEIGHTS = '/app/yolov3/yolov3.weights'
-    YOLO_CONFIG = '/app/yolov3/yolov3.cfg'
-    COCO_NAMES = '/app/yolov3/coco.names'
+    # YOLO_WEIGHTS = '/app/yolov3/yolov3.weights'
+    # YOLO_CONFIG = '/app/yolov3/yolov3.cfg'
+    # COCO_NAMES = '/app/yolov3/coco.names'
     # YOLO_WEIGHTS = os.path.join(os.path.dirname(__file__), '/app/yolov3/yolov3.weights')
     # YOLO_CONFIG = os.path.join(os.path.dirname(__file__), '/app/yolov3/yolov3.cfg')
     # COCO_NAMES = os.path.join(os.path.dirname(__file__), '/app/yolov3/coco.names')
+# YOLO specific configurations
+    YOLO_WEIGHTS = os.getenv('YOLO_WEIGHTS', '/app/yolov3.weights')
+    YOLO_CONFIG = os.getenv('YOLO_CONFIG', '/app/yolov3.cfg')
+    COCO_NAMES = os.getenv('COCO_NAMES', '/app/coco.names')

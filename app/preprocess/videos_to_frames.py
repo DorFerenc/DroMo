@@ -7,7 +7,7 @@ from app.config import Config
 class FrameExtractor:
     def __init__(self):
         # Load YOLO model
-        self.net = cv2.dnn.readNet(Config.YOLO_WEIGHTS, Config.YOLO_CONFIG)
+        self.net = cv2.dnn.readNetFromDarknet(Config.YOLO_WEIGHTS, Config.YOLO_CONFIG)
         self.layer_names = self.net.getLayerNames()
         self.output_layers = [self.layer_names[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
 
