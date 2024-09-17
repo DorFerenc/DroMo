@@ -6,9 +6,23 @@ from app.api.routes import api_bp
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
+import logging
 
 
 load_dotenv()  # Load environment variables from .env file
+
+# Create logs directory if it doesn't exist
+os.makedirs('/app/logs', exist_ok=True)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    filename='app.log')
+
+# Add a stream handler to also log to console
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
 
 def create_app(config_class=Config):
     """

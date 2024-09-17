@@ -16,6 +16,8 @@ services:
       - ./app:/app/app
       - ./run.py:/app/run.py
       - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./outputs:/app/outputs
     command: gunicorn --bind 0.0.0.0:5000 run:app
 
   mongo:

@@ -21,10 +21,6 @@ class ReconstructionService:
             raise ValueError("Database connection failed")
 
         try:
-            ReconstructionService.logger.info(f"Starting reconstruction for point cloud {point_cloud_id}")
-            if db is None:
-                ReconstructionService.logger.error("Database connection is None")
-                raise ValueError("Database connection failed")
             # Retrieve point cloud data
             point_cloud = db.point_clouds.find_one({'_id': ObjectId(point_cloud_id)})
             if not point_cloud:
@@ -39,9 +35,11 @@ class ReconstructionService:
             colors = point_cloud.get('colors')
             # Generate colors if not present
             if colors is None:
+                ReconstructionService.logger.info("Generating colors for point cloud")
                 colors = generate_colors(points, method='random')
 
             # Convert point cloud to mesh
+            ReconstructionService.logger.info("Converting point cloud to mesh")
             pc_to_mesh = PointCloudToMesh()
             try:
                 pc_to_mesh.set_point_cloud(points)
@@ -51,6 +49,7 @@ class ReconstructionService:
                 raise ValueError(f"Failed to generate mesh: {str(e)}")
 
             # Apply textures
+            ReconstructionService.logger.info("Applying textures to mesh")
             texture_mapper = TextureMapper()
             try:
                 texture_mapper.load_mesh(mesh)
@@ -61,19 +60,36 @@ class ReconstructionService:
                 raise ValueError(f"Failed to apply texture: {str(e)}")
 
             # Convert to OBJ and save files
+            ReconstructionService.logger.info("Converting mesh to OBJ and saving files")
             output_dir = 'outputs/models'
             os.makedirs(output_dir, exist_ok=True)
-            base_filename = f"{output_dir}/model_{point_cloud_id}"
+            if not os.access(output_dir, os.W_OK): # Ensure that the Python process has write permissions to the outputs/models directory.
+                ReconstructionService.logger.error(f"No write permission for directory: {output_dir}")
+                raise PermissionError(f"No write permission for directory: {output_dir}")
+            # base_filename = f"{output_dir}/model_{point_cloud_id}"
+            base_filename = os.path.join(output_dir, f"model_{point_cloud_id}")
             obj_filename = f"{base_filename}.obj"
             mtl_filename = f"{base_filename}.mtl"
             texture_filename = f"{base_filename}.png"
 
             textured_mesh = texture_mapper.get_textured_mesh()
-            # obj_converter = MeshToOBJConverter(mesh, texture_mapper)
             obj_converter = MeshToOBJConverter(textured_mesh, texture_mapper)
-            obj_converter.convert_and_save(obj_filename, texture_filename)
+            try:
+                obj_converter.convert_and_save(obj_filename, texture_filename)
+                ReconstructionService.logger.info(f"OBJ file saved as {obj_filename}")
+                ReconstructionService.logger.info(f"Texture file saved as {texture_filename}")
+            except Exception as e:
+                ReconstructionService.logger.error(f"Error saving OBJ and texture files: {str(e)}")
+                raise ValueError(f"Failed to save OBJ and texture files: {str(e)}")
+
+            # Verify that files were actually created
+            for filename in [obj_filename, mtl_filename, texture_filename]:
+                if not os.path.exists(filename):
+                    ReconstructionService.logger.error(f"File not created: {filename}")
+                    raise FileNotFoundError(f"File not created: {filename}")
 
             # Create and save model metadata
+            ReconstructionService.logger.info("Saving model metadata to database")
             model = ThreeDModel(
                 point_cloud_id=point_cloud_id,
                 obj_file=obj_filename,
@@ -82,6 +98,7 @@ class ReconstructionService:
             )
             model_id = model.save()
 
+            ReconstructionService.logger.info(f"Reconstruction completed successfully. Model ID: {model_id}")
             return str(model_id)
 
         except Exception as e:
