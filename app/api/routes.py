@@ -6,12 +6,14 @@ from app.db.mongodb import get_db
 from app.services.video_service import VideoService
 from app.services.reconstruction_service import ReconstructionService
 from app.models.point_cloud import PointCloud
+from app.services.preprocess_service import PreprocessService
 from bson import ObjectId, errors as bson_errors
 import os
 
 
 api_bp = Blueprint('api', __name__)
 video_service = VideoService()
+preprocess_service = PreprocessService()
 # reconstruction_service = ReconstructionService()
 
 
@@ -104,6 +106,34 @@ def delete_video(video_id):
     result = video_service.delete_video(video_id)
     if result:
         return jsonify({'message': 'Video deleted successfully'}), 200
+    else:
+        return jsonify({'error': 'Video not found or invalid ID'}), 404
+
+########################################################################
+# Pre Process api
+########################################################################
+
+@api_bp.route('/api/preprocess/<video_id>', methods=['POST'])
+def process_video(video_id):
+    """
+        PreProcess the video
+        Args:
+            video_id (str): The id of the video to preprocess.
+        Returns:
+            dict: The processed video data if found, None otherwise.
+        """
+    result = preprocess_service.process_video(video_id)
+    if result:
+        return jsonify(result), 200
+    else:
+        return jsonify({'error': 'Video not found or invalid ID'}), 404
+
+@api_bp.route('/api/preprocess/progress/<video_id>', methods=['GET'])
+def progress_process_video(video_id):
+    """PreProcess the video"""
+    result = preprocess_service.get_progress(video_id)
+    if result:
+        return jsonify(result), 200
     else:
         return jsonify({'error': 'Video not found or invalid ID'}), 404
 

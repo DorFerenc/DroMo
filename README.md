@@ -65,7 +65,7 @@ Dromo_Structure/
 │   ├── config.py
 │   ├── api
 │   │   ├── __init__.py
-│   │   └── routes.py
+│   │   ├── routes.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   └── mongodb.py
@@ -74,6 +74,8 @@ Dromo_Structure/
 │   │   ├── point_cloud.py
 │   │   ├── threed_model.py
 │   │   └── video.py
+│   ├── preprocess
+│   │   └── videos_to_frames.py
 │   ├── reconstruction
 │   │   ├── __init__.py
 │   │   ├── mesh_to_obj_converter.py
@@ -82,6 +84,7 @@ Dromo_Structure/
 │   │   └── texture_mapper.py
 │   ├── services
 │   │   ├── __init__.py
+│   │   ├── preprocess_service.py
 │   │   ├── reconstruction_service.py
 │   │   └── video_service.py
 │   └── static
@@ -96,8 +99,9 @@ Dromo_Structure/
 │   ├── test_api.py
 │   ├── test_point_cloud.py
 │   └── test_reconstruction_api.py
-└── uploads
-    └── test_video.mp4
+├── uploads
+│   └── test_video.mp4
+└── yolov3
 ```
 
 ### 🚀 Build smarter, not harder! → Upgrade docker speed

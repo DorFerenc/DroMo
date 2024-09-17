@@ -521,3 +521,8 @@ core-analyzer
 .pytest_cache/
 .*cache
 .*cache/
+
+# yolov3 model
+yolov3/yolov3.weights
+yolov3/yolov3.cfg
+yolov3/coco.names
