@@ -1,11 +1,12 @@
 """API routes for the DROMO system."""
 
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, send_file
 from werkzeug.utils import secure_filename
 from app.db.mongodb import get_db
 from app.services.video_service import VideoService
 from app.services.reconstruction_service import ReconstructionService
 from app.models.point_cloud import PointCloud
+from app.models.threed_model import ThreeDModel
 from app.services.preprocess_service import PreprocessService
 from bson import ObjectId, errors as bson_errors
 import os
@@ -251,3 +252,94 @@ def reconstruct(point_cloud_id):
     except Exception as e:
         current_app.logger.error(f"Reconstruction error: {str(e)}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
+########################################################################
+# 3D Model API
+########################################################################
+
+@api_bp.route('/api/models', methods=['GET'])
+def list_models():
+    """List all 3D models."""
+    models = ThreeDModel.get_all()
+    return jsonify([{
+        'id': str(model.id),
+        'name': model.name,
+        'folder_path': model.folder_path,
+        'point_cloud_id': model.point_cloud_id,
+        'obj_file': model.obj_file,
+        'mtl_file': model.mtl_file,
+        'texture_file': model.texture_file,
+        'created_at': model.created_at.isoformat()
+    } for model in models]), 200
+
+@api_bp.route('/api/models/<model_id>', methods=['GET'])
+def get_model(model_id):
+    """Retrieve a specific 3D model."""
+    model = ThreeDModel.get_by_id(model_id)
+    if model:
+        return jsonify({
+            'id': str(model.id),
+            'name': model.name,
+            'folder_path': model.folder_path,
+            'point_cloud_id': model.point_cloud_id,
+            'obj_file': model.obj_file,
+            'mtl_file': model.mtl_file,
+            'texture_file': model.texture_file,
+            'created_at': model.created_at.isoformat()
+        }), 200
+    else:
+        return jsonify({'error': '3D model not found'}), 404
+
+@api_bp.route('/api/models/<model_id>', methods=['DELETE'])
+def delete_model(model_id):
+    """Delete a specific 3D model."""
+    model = ThreeDModel.get_by_id(model_id)
+    if model:
+        # Delete associated files
+        for file_path in [model.obj_file, model.mtl_file, model.texture_file]:
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+
+        # Remove the model directory if it's empty
+        if os.path.exists(model.folder_path) and not os.listdir(model.folder_path):
+            os.rmdir(model.folder_path)
+
+        # Delete the model from the database
+        if ThreeDModel.delete(model_id):
+            return jsonify({'message': '3D model deleted successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to delete 3D model from database'}), 500
+    else:
+        return jsonify({'error': '3D model not found'}), 404
+
+@api_bp.route('/api/models/<model_id>/download', methods=['GET'])
+def download_model(model_id):
+    """Download the OBJ file of a specific 3D model."""
+    model = ThreeDModel.get_by_id(model_id)
+    if model and model.obj_file:
+        file_path = os.path.join(model.folder_path, model.obj_file)
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True)
+        else:
+            return jsonify({'error': 'OBJ file not found on server'}), 404
+    else:
+        return jsonify({'error': '3D model or OBJ file not found'}), 404
+
+@api_bp.route('/api/models/<model_id>/texture', methods=['GET'])
+def download_texture(model_id):
+    """Download the texture file of a specific 3D model."""
+    model = ThreeDModel.get_by_id(model_id)
+    if model and model.texture_file and os.path.exists(model.texture_file):
+        return send_file(model.texture_file, as_attachment=True)
+    else:
+        return jsonify({'error': '3D model or texture file not found'}), 404
+
+
+@api_bp.route('/api/models/<model_id>/material', methods=['GET'])
+def download_material(model_id):
+    """Download the material (MTL) file of a specific 3D model."""
+    model = ThreeDModel.get_by_id(model_id)
+    if model and model.mtl_file and os.path.exists(model.mtl_file):
+        return send_file(model.mtl_file, as_attachment=True)
+    else:
+        return jsonify({'error': '3D model or material file not found'}), 404

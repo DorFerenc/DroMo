@@ -1,5 +1,6 @@
 import os
 from bson import ObjectId
+from flask import current_app
 from app.db.mongodb import get_db
 from app.reconstruction.point_cloud_to_mesh import PointCloudToMesh
 from app.reconstruction.texture_mapper import TextureMapper
@@ -67,7 +68,8 @@ class ReconstructionService:
                 raise ValueError("Point cloud name not found")
             safe_name = ''.join(c if c.isalnum() else '_' for c in point_cloud_name)  # Sanitize the name
             model_name = f"{safe_name}_{point_cloud_id}"
-            output_dir = os.path.join('/app/outputs', model_name)
+            # output_dir = os.path.join('/app/outputs', model_name)
+            output_dir = os.path.join(current_app.config['MODELS_FOLDER'], model_name)
             os.makedirs(output_dir, exist_ok=True)
 
             if not os.access(output_dir, os.W_OK):
@@ -100,6 +102,8 @@ class ReconstructionService:
             # Create and save model metadata
             ReconstructionService.logger.info("Saving model metadata to database")
             model = ThreeDModel(
+                name=model_name,
+                folder_path=output_dir,
                 point_cloud_id=point_cloud_id,
                 obj_file=obj_filename,
                 mtl_file=mtl_filename, # this is null currently
