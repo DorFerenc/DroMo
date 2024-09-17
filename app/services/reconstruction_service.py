@@ -36,7 +36,7 @@ class ReconstructionService:
             # Generate colors if not present
             if colors is None:
                 ReconstructionService.logger.info("Generating colors for point cloud")
-                colors = generate_colors(points, method='random')
+                colors = generate_colors(points, method='height')
 
             # Convert point cloud to mesh
             ReconstructionService.logger.info("Converting point cloud to mesh")
@@ -59,19 +59,28 @@ class ReconstructionService:
                 ReconstructionService.logger.error(f"Error applying texture: {str(e)}")
                 raise ValueError(f"Failed to apply texture: {str(e)}")
 
-            # Convert to OBJ and save files
-            ReconstructionService.logger.info("Converting mesh to OBJ and saving files")
-            output_dir = 'outputs/models'
+            # Create a unique folder for this model, including the point cloud name
+            point_cloud_name = point_cloud.get('name')
+            # Generate colors if not present
+            if point_cloud_name is None:
+                ReconstructionService.logger.error(f"Point cloud name: {point_cloud_id} not found")
+                raise ValueError("Point cloud name not found")
+            safe_name = ''.join(c if c.isalnum() else '_' for c in point_cloud_name)  # Sanitize the name
+            model_name = f"{safe_name}_{point_cloud_id}"
+            output_dir = os.path.join('/app/outputs', model_name)
             os.makedirs(output_dir, exist_ok=True)
-            if not os.access(output_dir, os.W_OK): # Ensure that the Python process has write permissions to the outputs/models directory.
+
+            if not os.access(output_dir, os.W_OK):
                 ReconstructionService.logger.error(f"No write permission for directory: {output_dir}")
                 raise PermissionError(f"No write permission for directory: {output_dir}")
-            # base_filename = f"{output_dir}/model_{point_cloud_id}"
-            base_filename = os.path.join(output_dir, f"model_{point_cloud_id}")
-            obj_filename = f"{base_filename}.obj"
-            mtl_filename = f"{base_filename}.mtl"
-            texture_filename = f"{base_filename}.png"
 
+            # Define filenames
+            obj_filename = os.path.join(output_dir, f"{model_name}.obj")
+            mtl_filename = os.path.join(output_dir, f"{model_name}.mtl")
+            texture_filename = os.path.join(output_dir, f"{model_name}.png")
+
+            # Convert to OBJ and save files
+            ReconstructionService.logger.info(f"Converting mesh to OBJ and saving files to {output_dir}")
             textured_mesh = texture_mapper.get_textured_mesh()
             obj_converter = MeshToOBJConverter(textured_mesh, texture_mapper)
             try:

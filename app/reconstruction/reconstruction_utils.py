@@ -1,3 +1,9 @@
+import numpy as np
+import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
+
 def load_point_cloud_from_csv(filename):
     """
     Load point cloud data from a CSV file.
@@ -35,25 +41,31 @@ def load_point_cloud_from_csv(filename):
         logger.error(f"Error loading point cloud from CSV: {str(e)}")
         raise
 
-
-def generate_colors(points, method='random'):
+def generate_colors(points, method='height'):
     """
     Generate colors for points if original data doesn't include color information.
 
     Args:
-        points (numpy.ndarray): Array of 3D point coordinates.
+        points (list or numpy.ndarray): List or array of 3D point coordinates.
         method (str): Method to generate colors. Options: 'random', 'height', 'distance'
 
     Returns:
         numpy.ndarray: Array of RGB color values for each point.
     """
+    # Convert points to numpy array if it's a list
+    points = np.array(points) if isinstance(points, list) else points
+
     if method == 'random':
         return np.random.rand(len(points), 3)
     elif method == 'height':
         # Color based on height (z-coordinate)
         z_values = points[:, 2]
         colors = np.zeros((len(points), 3))
-        colors[:, 0] = (z_values - z_values.min()) / (z_values.max() - z_values.min())  # Red channel
+        z_min, z_max = z_values.min(), z_values.max()
+        if z_min != z_max:  # Avoid division by zero
+            colors[:, 0] = (z_values - z_min) / (z_max - z_min)  # Red channel
+        else:
+            colors[:, 0] = 0.5  # Set to middle value if all points have the same height
         colors[:, 2] = 1 - colors[:, 0]  # Blue channel
         return colors
     elif method == 'distance':
@@ -61,7 +73,11 @@ def generate_colors(points, method='random'):
         center = np.mean(points, axis=0)
         distances = np.linalg.norm(points - center, axis=1)
         colors = np.zeros((len(points), 3))
-        colors[:, 0] = (distances - distances.min()) / (distances.max() - distances.min())  # Red channel
+        d_min, d_max = distances.min(), distances.max()
+        if d_min != d_max:  # Avoid division by zero
+            colors[:, 0] = (distances - d_min) / (d_max - d_min)  # Red channel
+        else:
+            colors[:, 0] = 0.5  # Set to middle value if all points are equidistant
         colors[:, 2] = 1 - colors[:, 0]  # Blue channel
         return colors
     else:
