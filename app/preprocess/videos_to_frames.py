@@ -1,4 +1,4 @@
-# app/preprocess/object_detection.py
+# app/preprocess/videos_to_frames.py
 import cv2
 import numpy as np
 import os
