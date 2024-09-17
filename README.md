@@ -72,11 +72,13 @@ Dromo_Structure/
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── point_cloud.py
+│   │   ├── threed_model.py
 │   │   └── video.py
 │   ├── reconstruction
 │   │   ├── __init__.py
 │   │   ├── mesh_to_obj_converter.py
 │   │   ├── point_cloud_to_mesh.py
+│   │   ├── reconstruction_utils.py
 │   │   └── texture_mapper.py
 │   ├── services
 │   │   ├── __init__.py
@@ -92,7 +94,8 @@ Dromo_Structure/
 ├── tests
 │   ├── __init__.py
 │   ├── test_api.py
-│   └── test_point_cloud.py
+│   ├── test_point_cloud.py
+│   └── test_reconstruction_api.py
 └── uploads
     └── test_video.mp4
 ```

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import cKDTree
 from scipy import ndimage
-
+import logging
 
 class TextureMapper:
     """
@@ -39,6 +39,7 @@ class TextureMapper:
         self.point_cloud = None
         self.colors = None
         self.texture_resolution = texture_resolution
+        self.logger = logging.getLogger(__name__)
 
     def load_mesh(self, mesh):
         """
@@ -57,8 +58,10 @@ class TextureMapper:
             points (numpy.ndarray): The point cloud data.
             colors (numpy.ndarray): The color data corresponding to the point cloud.
         """
-        self.point_cloud = points
-        self.colors = colors
+        # self.point_cloud = points
+        # self.colors = colors
+        self.point_cloud = np.array(points)
+        self.colors = np.array(colors)
 
     def apply_texture(self):
         """
@@ -76,6 +79,8 @@ class TextureMapper:
         Raises:
             ValueError: If the mesh or point cloud with colors hasn't been loaded.
         """
+        if self.mesh is None or self.point_cloud is None or self.colors is None:
+            raise ValueError("Mesh and point cloud with colors must be loaded before applying texture.")
         self.map_colors_to_mesh()
         self.smooth_texture()
         # Apply UV mapping (if needed for OBJ export)
@@ -93,16 +98,23 @@ class TextureMapper:
         """
         if self.mesh is None or self.point_cloud is None or self.colors is None:
             raise ValueError("Mesh and point cloud with colors must be loaded before mapping.")
+        try:
+            tree = cKDTree(self.point_cloud)
+            distances, indices = tree.query(self.mesh.points)
+            vertex_colors = self.colors[indices]
 
-        tree = cKDTree(self.point_cloud)
-        distances, indices = tree.query(self.mesh.points)
-        vertex_colors = self.colors[indices]
+            # Ensure indices are integers
+            indices = indices.astype(int)
 
-        # Ensure colors are in the range [0, 1]
-        if vertex_colors.max() > 1.0:
-            vertex_colors = vertex_colors / 255.0
+            # Ensure colors are in the range [0, 1]
+            if vertex_colors.max() > 1.0:
+                vertex_colors = vertex_colors / 255.0
 
-        self.mesh.point_data["RGB"] = vertex_colors
+            self.mesh.point_data["RGB"] = vertex_colors
+        except Exception as e:
+            self.logger.error(f"Error in map_colors_to_mesh: {str(e)}", exc_info=True)
+            raise
+
 
     def apply_smart_uv_mapping(self):
         """
