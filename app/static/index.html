@@ -307,6 +307,16 @@
             }
         }
 
+        async function reconstructPointCloud(pointCloudId) {
+        try {
+            const response = await axios.post(`${API_URL}/reconstruct/${pointCloudId}`);
+            alert(`Reconstruction started. Model ID: ${response.data.model_id}`);
+        } catch (error) {
+            console.error('Error starting reconstruction:', error);
+            alert('Error starting reconstruction');
+            }
+        }
+
         async function listPointClouds() {
             try {
                 const response = await axios.get(`${API_URL}/point_clouds`);
@@ -319,6 +329,7 @@
                         <div>
                             <button onclick="getPointCloudDetails('${pc.id}')">Details</button>
                             <button class="delete" onclick="deletePointCloud('${pc.id}')">Delete</button>
+                            <button onclick="reconstructPointCloud('${pc.id}')">Reconstruct</button>
                         </div>
                     `;
                     pointCloudList.appendChild(li);

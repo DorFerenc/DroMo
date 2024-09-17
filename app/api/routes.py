@@ -4,14 +4,16 @@ from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from app.db.mongodb import get_db
 from app.services.video_service import VideoService
+from app.services.reconstruction_service import ReconstructionService
 from app.models.point_cloud import PointCloud
 from bson import ObjectId, errors as bson_errors
 import os
-# from app.services.reconstruction_service import ReconstructionService
+
 
 api_bp = Blueprint('api', __name__)
 video_service = VideoService()
 # reconstruction_service = ReconstructionService()
+
 
 # @api_bp.route('/', methods=['GET'])
 # def home():
@@ -189,34 +191,33 @@ def delete_point_cloud(point_cloud_id):
     except bson_errors.InvalidId:
         return jsonify({'error': 'Invalid point cloud ID'}), 400
 
+########################################################################
+# Reconstruction
+########################################################################
 
-# @api_bp.route('/api/reconstruct/<id>', methods=['POST'])
-# def reconstruct(id):
-#     """
-#     Start the reconstruction process for a given point cloud.
 
-#     Args:
-#         id (str): Point Cloud ID
+@api_bp.route('/api/reconstruct/<point_cloud_id>', methods=['POST'])
+def reconstruct(point_cloud_id):
+    """
+    Start the reconstruction process for a given point cloud.
 
-#     Returns:
-#         JSON response with reconstruction status and model ID.
-#     """
-#     try:
-#         # Assuming you have a method to get point cloud data by ID
-#         point_cloud_data = video_service.get_point_cloud(id)
+    Args:
+        point_cloud_id (str): Point Cloud ID
 
-#         if not point_cloud_data:
-#             return jsonify({"error": "Point cloud not found"}), 404
+    Returns:
+        JSON response with reconstruction status and model ID.
+    """
+    try:
+        model_id = ReconstructionService.start_reconstruction(point_cloud_id)
 
-#         # Start the reconstruction process asynchronously
-#         model_id = reconstruction_service.start_reconstruction(id, point_cloud_data)
+        return jsonify({
+            "message": "Reconstruction completed successfully",
+            "model_id": model_id
+        }), 200
 
-#         return jsonify({
-#             "message": "Reconstruction started",
-#             "model_id": model_id
-#         }), 200
-
-#     except Exception as e:
-#         current_app.logger.error(f"Reconstruction error: {str(e)}")
-#         return jsonify({"error": "Internal server error"}), 500
-
+    except ValueError as e:
+        current_app.logger.error(f"Reconstruction error: {str(e)}")
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        current_app.logger.error(f"Reconstruction error: {str(e)}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
