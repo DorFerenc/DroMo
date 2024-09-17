@@ -2,10 +2,12 @@
 
 from flask_pymongo import PyMongo
 from pymongo.errors import ConnectionFailure
-from flask import current_app
+from flask import current_app, g
 import logging
 
 mongo = PyMongo()
+logger = logging.getLogger(__name__)
+
 
 def init_db(app):
     """
@@ -20,6 +22,9 @@ def init_db(app):
     mongo.init_app(app)
 
     try:
+        # Test the connection
+        mongo.db.command('ping')
+        logger.info("Successfully connected to MongoDB")
         # The ismaster command is cheap and does not require auth.
         mongo.cx.admin.command('ismaster')
         logging.info("MongoDB connection successful.")
