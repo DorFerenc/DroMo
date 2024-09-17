@@ -30,12 +30,15 @@ class PointCloudToMesh:
         Set the point cloud data.
 
         Args:
-            points (np.ndarray): Array of 3D point coordinates.
+            points (list or np.ndarray): Array of 3D point coordinates.
         """
         if len(points) == 0:
             raise ValueError("Point cloud cannot be empty")
-        if points.shape[1] != 3:
-            raise ValueError("Point cloud must have 3 dimensions (x, y, z)")
+        # Convert to numpy array if it's not already
+        if not isinstance(points, np.ndarray):
+            points = np.array(points)
+        if points.ndim != 2 or points.shape[1] != 3:
+            raise ValueError("Point cloud must be a 2D array with 3 columns (x, y, z)")
         self.point_cloud = points
         self.logger.info(f"Point cloud set with {len(points)} points")
 

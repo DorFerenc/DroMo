@@ -31,23 +31,34 @@ class ReconstructionService:
                 ReconstructionService.logger.error(f"Point cloud {point_cloud_id} not found")
                 raise ValueError("Point cloud not found")
 
-            points = point_cloud['points']
-            colors = point_cloud.get('colors')
+            # points = point_cloud['points']
+            points = point_cloud.get('points')
+            if not points:
+                raise ValueError("Point cloud has no points data")
 
+            colors = point_cloud.get('colors')
             # Generate colors if not present
             if colors is None:
                 colors = generate_colors(points, method='random')
 
             # Convert point cloud to mesh
             pc_to_mesh = PointCloudToMesh()
-            pc_to_mesh.set_point_cloud(points)
-            mesh = pc_to_mesh.generate_mesh()
+            try:
+                pc_to_mesh.set_point_cloud(points)
+                mesh = pc_to_mesh.generate_mesh()
+            except ValueError as e:
+                ReconstructionService.logger.error(f"Error generating mesh: {str(e)}")
+                raise ValueError(f"Failed to generate mesh: {str(e)}")
 
             # Apply textures
             texture_mapper = TextureMapper()
-            texture_mapper.load_mesh(mesh)
-            texture_mapper.load_point_cloud_with_colors(points, colors)
-            texture_mapper.apply_texture()
+            try:
+                texture_mapper.load_mesh(mesh)
+                texture_mapper.load_point_cloud_with_colors(points, colors)
+                texture_mapper.apply_texture()
+            except Exception as e:
+                ReconstructionService.logger.error(f"Error applying texture: {str(e)}")
+                raise ValueError(f"Failed to apply texture: {str(e)}")
 
             # Convert to OBJ and save files
             output_dir = 'outputs/models'
