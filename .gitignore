@@ -524,5 +524,4 @@ core-analyzer
 
 
 # yolov3 model
-app/preprocess/yolov3
-app/preprocess/yolov3/
+app/preprocess/yolov3/yolov3.weights
