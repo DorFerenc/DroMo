@@ -526,6 +526,7 @@ core-analyzer
 yolov3/yolov3.weights
 yolov3/yolov3.cfg
 yolov3/coco.names
+yolov8n.pt
 
 #3d_model
 outputs/*
