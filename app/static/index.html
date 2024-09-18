@@ -240,6 +240,7 @@
                         <span>${video.title}</span>
                         <div>
                             <button onclick="getVideoDetails('${video.id}')">Details</button>
+                            <button onclick="preprocessVideo('${video.id}')">Preprocess</button>
                             <button class="delete" onclick="deleteVideo('${video.id}')">Delete</button>
                         </div>
                     `;
@@ -271,6 +272,26 @@
                 alert('Error getting video details');
             }
         }
+
+        /**
+         * Sends a request to preprocess a video
+         * @param {string} id - The ID of the video to preprocess
+         */
+        async function preprocessVideo(id) {
+            try {
+                const response = await axios.post(`${API_URL}/preprocess/${id}`);
+                alert(`Preprocessing started.\t Status: ${response.data.status}`);
+                // Optionally, you can also add code here to track progress or update UI
+            } catch (error) {
+                console.error('Error preprocessing video:', error);
+                let errorMessage = 'Error preprocessing video';
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                }
+                alert(errorMessage);
+            }
+        }
+
 
         /**
          * Deletes a video from the server

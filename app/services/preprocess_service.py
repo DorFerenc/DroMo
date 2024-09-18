@@ -1,3 +1,4 @@
+from app.preprocess.sfm import StructureFromMotion
 from app.preprocess.videos_to_frames import FrameExtractor
 from app.db.mongodb import get_db
 import os
@@ -24,15 +25,12 @@ class PreprocessService:
             return None
 
         input_path = video['file_path']
-        output_dir = os.path.join(os.path.dirname(input_path), f"{video_id}_frames")
+        output_dir = ( f"app/frames/{video_id}_frames")
 
         frameExtractor = FrameExtractor()
         frames_processed = frameExtractor.extract_relevant_frames(input_path, output_dir)
 
-        if frames_processed == None:
-            return None
-
-        if frames_processed >= 0:
+        if frames_processed > 0:
             # Update video document with processing information
             db = get_db()
             db.videos.update_one(
@@ -44,10 +42,18 @@ class PreprocessService:
                 }}
             )
 
+            # # Create an instance of StructureFromMotion
+            # sfm = StructureFromMotion(f'uploads/{video_id}_frames')
+            #
+            # # Load images and reconstruct 3D points
+            # sfm.load_images()
+            # sfm.save_to_db(name='example_point_cloud')
+
             return {
                 'video_id': video_id,
                 'frames_processed': frames_processed,
-                'frames_directory': output_dir
+                'frames_directory': output_dir,
+                'status': f'{frames_processed} has processed'
             }
         return None
 

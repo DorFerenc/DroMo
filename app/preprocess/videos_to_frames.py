@@ -44,7 +44,7 @@ class FrameExtractor:
 
         return objects
 
-    def find_prominent_object(self, video_path, interval=20, sample_size=100):
+    def find_prominent_object(self, video_path, interval=10, sample_size=100):
         """
         Analyze a sample of frames to determine the most prominent object.
 
@@ -85,7 +85,7 @@ class FrameExtractor:
     # The rest of the methods (is_frame_blurry, check_lighting, crop_to_object, apply_abominations)
     # can remain the same as they don't directly interact with the YOLO model.
 
-    def is_frame_blurry(self, frame, threshold=100.0):
+    def is_frame_blurry(self, frame, threshold=50.0):
         """
         Check if the frame is blurry using the Laplacian variance method.
 
@@ -164,7 +164,7 @@ class FrameExtractor:
 
         return processed_frame
 
-    def extract_frames_with_object(self, video_path, output_dir, prominent_object, interval=20):
+    def extract_frames_with_object(self, video_path, output_dir, prominent_object, interval=5):
         """
         Extract frames from the video where the most prominent object is detected.
 
@@ -197,7 +197,7 @@ class FrameExtractor:
             if frame_id - last_detected_frame >= interval:
                 objects = self.detect_object(frame)
                 for (class_id, confidence, (x, y, w, h)) in objects:
-                    if class_id == prominent_object and not self.is_frame_blurry(frame) and self.check_lighting(frame):
+                    if class_id == prominent_object and self.check_lighting(frame) and not self.is_frame_blurry(frame):
                         # Crop the frame to the detected object
                         cropped_frame = self.crop_to_object(frame, (x, y, w, h))
 
@@ -215,7 +215,7 @@ class FrameExtractor:
         cap.release()
         return frames_count
 
-    def extract_relevant_frames(self, video_path, output_dir, interval=20, sample_size=100):
+    def extract_relevant_frames(self, video_path, output_dir, interval=5, sample_size=100):
         """
         Extract frames from a video based on the most prominent object detection and frame quality.
 
