@@ -29,6 +29,9 @@ class PreprocessService:
         frameExtractor = FrameExtractor()
         frames_processed = frameExtractor.extract_relevant_frames(input_path, output_dir)
 
+        if frames_processed == None:
+            return None
+
         if frames_processed >= 0:
             # Update video document with processing information
             db = get_db()
