@@ -4,57 +4,44 @@ import numpy as np
 import os
 from collections import defaultdict
 from app.config import Config
+from ultralytics import YOLO
 
 class FrameExtractor:
     """
-   A class to extract frames from a video based on object detection and frame quality.
-   It uses the YOLO object detection model to detect objects and applies checks for frame quality
-   (blur detection, lighting, and exposure).
-   """
+    A class to extract frames from a video based on object detection and frame quality.
+    It uses the YOLOv8 object detection model to detect objects and applies checks for frame quality
+    (blur detection, lighting, and exposure).
+    """
     def __init__(self):
         """
-        Initialize the FrameExtractor with YOLO model and COCO labels.
+        Initialize the FrameExtractor with YOLOv8 model.
         """
-        # Load YOLO model
-        self.net = cv2.dnn.readNet(Config.YOLO_WEIGHTS, Config.YOLO_CONFIG)
-        self.layer_names = self.net.getLayerNames()
-        self.output_layers = [self.layer_names[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
-
-        # Load COCO dataset labels for YOLO
-        with open(Config.COCO_NAMES, 'r') as f:
-            self.classes = [line.strip() for line in f.readlines()]
+        # Load YOLOv8 model
+        self.model = YOLO('yolov8n.pt')  # You can change this to other YOLOv8 models as needed
 
     def detect_object(self, frame):
         """
-        Detect objects in the frame using the YOLO model.
-       Parameters:
+        Detect objects in the frame using the YOLOv8 model.
+        Parameters:
         - frame: np.array
             The frame in which to detect objects.
         Returns:
         - list: A list of tuples, where each tuple contains (class_id, confidence, (x, y, w, h))
                 for each detected object.
-       """
-        height, width, channels = frame.shape
-        blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
-        self.net.setInput(blob)
-
-        detections = self.net.forward(self.output_layers)
+        """
+        results = self.model(frame)
         objects = []
 
-        for detection in detections:
-            for obj in detection:
-                scores = obj[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                if confidence > 0.5:  # Threshold for detection confidence
-                    # Get bounding box coordinates
-                    center_x = int(obj[0] * width)
-                    center_y = int(obj[1] * height)
-                    w = int(obj[2] * width)
-                    h = int(obj[3] * height)
-                    x = center_x - w // 2
-                    y = center_y - h // 2
-                    objects.append((class_id, confidence, (x, y, w, h)))
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                conf = box.conf[0].item()
+                cls = int(box.cls[0].item())
+                w = x2 - x1
+                h = y2 - y1
+                objects.append((cls, conf, (int(x1), int(y1), int(w), int(h))))
+
         return objects
 
     def find_prominent_object(self, video_path, interval=20, sample_size=100):
@@ -90,13 +77,13 @@ class FrameExtractor:
             frame_id += 1
 
         cap.release()
-        # Determine the most prominent object by frequency or area
-        # Choose based on which appears most often or has the largest total area
-        if (len(object_counter) == 0):
+        if len(object_counter) == 0:
             return None
         most_frequent_object = max(object_counter, key=object_counter.get)
-        #largest_object = max(area_counter, key=area_counter.get)
         return most_frequent_object
+
+    # The rest of the methods (is_frame_blurry, check_lighting, crop_to_object, apply_abominations)
+    # can remain the same as they don't directly interact with the YOLO model.
 
     def is_frame_blurry(self, frame, threshold=100.0):
         """
@@ -247,10 +234,9 @@ class FrameExtractor:
         """
         # First, find the most prominent object in the video
         prominent_object = self.find_prominent_object(video_path, interval, sample_size)
-        if prominent_object == None:
+        if prominent_object is None:
             return None
-        prominent_object_name = self.classes[prominent_object]
+        prominent_object_name = self.model.names[prominent_object]
         print(f"The most prominent object is: {prominent_object_name}")
         # Then, extract frames where that prominent object appears
         return self.extract_frames_with_object(video_path, output_dir, prominent_object, interval)
-

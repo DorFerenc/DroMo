@@ -12,13 +12,22 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     build-essential \
     libopencv-dev \
-    && rm -rf /var/lib/apt/lists/*
+    wget
 
-# Copy the current directory contents into the container at /app
-COPY . /app
-
+# Copy only the requirements file first to leverage Docker cache
+COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install YOLOv8
+RUN pip install ultralytics
+# Download YOLOv8 model
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+# Create necessary directories
+RUN mkdir -p /app/logs /app/outputs /app/yolov8
+
+# Copy the rest of the application
+COPY . /app
 
 # Create necessary directories
 RUN mkdir -p /app/logs /app/outputs
