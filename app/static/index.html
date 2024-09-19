@@ -533,9 +533,15 @@
                 console.log('Model details for visualization:', modelDetails.data);
                 const { obj_file, mtl_file, texture_file } = modelDetails.data;
 
+                // Clear the existing viewer container
+                const viewerContainer = document.getElementById('modelViewer');
+                viewerContainer.innerHTML = '';
+
+                // Dispose of the previous viewer if it exists
                 if (currentModelViewer) {
                     console.log('Clearing previous model viewer');
-                    currentModelViewer.clear();
+                    currentModelViewer.dispose();
+                    // currentModelViewer.clear();
                 }
 
                 console.log('Creating new ModelViewer');
@@ -583,6 +589,7 @@
                 this.scene.add(directionalLight);
 
                 this.animate = this.animate.bind(this);
+                this.animationFrameId = null;
                 this.animate();
 
                 console.log('ModelViewer initialized');
@@ -627,16 +634,52 @@
             }
 
             animate() {
-                requestAnimationFrame(this.animate);
+                // requestAnimationFrame(this.animate);
+                this.animationFrameId = requestAnimationFrame(this.animate);
                 this.controls.update();
                 this.renderer.render(this.scene, this.camera);
             }
 
-            clear() {
-                while(this.scene.children.length > 0) {
-                    this.scene.remove(this.scene.children[0]);
+            // clear() {
+            //     while(this.scene.children.length > 0) {
+            //         this.scene.remove(this.scene.children[0]);
+            //     }
+            //     console.log('Scene cleared');
+            // }
+
+            dispose() {
+                console.log('Disposing ModelViewer');
+                // Stop the animation loop
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
                 }
-                console.log('Scene cleared');
+
+                // Dispose of Three.js objects
+                this.scene.traverse((object) => {
+                    if (object.geometry) {
+                        object.geometry.dispose();
+                    }
+                    if (object.material) {
+                        if (Array.isArray(object.material)) {
+                            object.material.forEach(material => material.dispose());
+                        } else {
+                            object.material.dispose();
+                        }
+                    }
+                });
+
+                // Dispose of the renderer
+                this.renderer.dispose();
+
+                // Remove the canvas element from the DOM
+                if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+                    this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+                }
+
+                // Dispose of the controls
+                this.controls.dispose();
+
+                console.log('ModelViewer disposed');
             }
         }
 
