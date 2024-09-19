@@ -246,8 +246,21 @@ class TextureMapper:
         mask = np.zeros((self.texture_resolution, self.texture_resolution), dtype=bool)
 
         for i, uv in enumerate(uv_coords):
-            x = int(uv[0] * (self.texture_resolution - 1))
-            y = int((1 - uv[1]) * (self.texture_resolution - 1))
+            # x = int(uv[0] * (self.texture_resolution - 1))
+            # y = int((1 - uv[1]) * (self.texture_resolution - 1))
+            # texture_image[y, x] = colors[i]
+            # mask[y, x] = True
+                # Ensure UV coordinates are within [0, 1]
+            u = np.clip(uv[0], 0, 1)
+            v = np.clip(uv[1], 0, 1)
+
+            x = int(u * (self.texture_resolution - 1))
+            y = int((1 - v) * (self.texture_resolution - 1))
+
+            # Double-check to ensure we're within bounds
+            x = np.clip(x, 0, self.texture_resolution - 1)
+            y = np.clip(y, 0, self.texture_resolution - 1)
+
             texture_image[y, x] = colors[i]
             mask[y, x] = True
 
