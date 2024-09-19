@@ -1,6 +1,6 @@
 """API routes for the DROMO system."""
 
-from flask import Blueprint, request, jsonify, current_app, send_file
+from flask import Blueprint, request, jsonify, current_app, send_file, abort
 from werkzeug.utils import secure_filename
 from app.db.mongodb import get_db
 from app.services.video_service import VideoService
@@ -343,3 +343,13 @@ def download_material(model_id):
         return send_file(model.mtl_file, as_attachment=True)
     else:
         return jsonify({'error': '3D model or material file not found'}), 404
+
+@api_bp.route('/api/models/<model_id>/obj', methods=['GET'])
+def get_model_obj(model_id):
+    """Serve the OBJ file for a specific 3D model."""
+    model = ThreeDModel.get_by_id(model_id)
+    if model and model.obj_file:
+        file_path = os.path.join(model.folder_path, model.obj_file)
+        if os.path.exists(file_path):
+            return send_file(file_path)
+    abort(404)
