@@ -124,3 +124,33 @@ def test_progress_process_video_not_found(client):
     response = client.get(f'/api/preprocess/progress/{nonexistent_id}')
     assert response.status_code == 404
     assert json.loads(response.data)['error'] == 'Video not found or invalid ID'
+
+
+def test_preprocess_video_success(client, mongo):
+    """
+    Scenario: Successfully preprocess a video
+        Given I have a video in the database
+        When I send a POST request to preprocess the video
+        Then I should receive the processed video data
+    """
+    # First, upload a video
+    with open('tests/videos/input_video.mp4', 'rb') as video_file:
+        upload_data = {
+            'title': 'Test Video',
+            'file': (video_file, 'test_video.mp4')
+        }
+        upload_response = client.post('/api/upload', data=upload_data, content_type='multipart/form-data')
+        assert upload_response.status_code == 200
+        upload_result = json.loads(upload_response.data.decode('utf-8'))
+        video_id = upload_result['video_id']
+        assert video_id
+        print("#video_id", video_id)
+
+    # Now, preprocess the video
+    preprocess_response = client.post(f'/api/preprocess/{video_id}')
+    assert preprocess_response.status_code == 200
+
+    preprocess_data = json.loads(preprocess_response.data.decode('utf-8'))
+    assert preprocess_data['video_id'] == video_id
+    assert 'frames_processed' in preprocess_data
+    assert 'frames_directory' in preprocess_data

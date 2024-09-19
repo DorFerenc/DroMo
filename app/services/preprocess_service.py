@@ -42,18 +42,19 @@ class PreprocessService:
                 }}
             )
 
-            # # Create an instance of StructureFromMotion
-            # sfm = StructureFromMotion(f'uploads/{video_id}_frames')
-            #
-            # # Load images and reconstruct 3D points
-            # sfm.load_images()
-            # sfm.save_to_db(name='example_point_cloud')
+            # Create an instance of StructureFromMotion
+            sfm = StructureFromMotion(f'app/frames/{video_id}_frames')
+
+            # Load images and reconstruct 3D points
+            sfm.load_images()
+            point_cloud_len = sfm.save_to_db(name='example_point_cloud')
 
             return {
                 'video_id': video_id,
                 'frames_processed': frames_processed,
                 'frames_directory': output_dir,
-                'status': f'{frames_processed} has processed'
+                'point_cloud_len': point_cloud_len,
+                'status': f'{frames_processed} frames processed, {point_cloud_len} pointcloud made'
             }
         return None
 
