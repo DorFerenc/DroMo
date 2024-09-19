@@ -353,3 +353,17 @@ def get_model_obj(model_id):
         if os.path.exists(file_path):
             return send_file(file_path)
     abort(404)
+
+
+@api_bp.route('/api/models/<model_id>/<filename>', methods=['GET'])
+def get_model_file(model_id, filename):
+    """Serve model files (OBJ, MTL, or texture)."""
+    model = ThreeDModel.get_by_id(model_id)
+    if not model:
+        abort(404, description="Model not found")
+
+    file_path = os.path.join(model.folder_path, filename)
+    if not os.path.exists(file_path):
+        abort(404, description=f"File {filename} not found for model {model_id}")
+
+    return send_file(file_path)

@@ -477,6 +477,7 @@
                     <p>Texture File: ${response.data.texture_file}</p>
                     <p>Created At: ${response.data.created_at}</p>
                 `;
+                console.log('Model details:', response.data);
             } catch (error) {
                 console.error('Error getting 3D model details:', error);
                 alert('Error getting 3D model details');
@@ -526,19 +527,29 @@
          * Visualizes a 3D model
          */
         async function visualizeModel(modelId) {
+            console.log('Visualizing model:', modelId);
             try {
                 const modelDetails = await axios.get(`${API_URL}/models/${modelId}`);
+                console.log('Model details for visualization:', modelDetails.data);
                 const { obj_file, mtl_file, texture_file } = modelDetails.data;
 
                 if (currentModelViewer) {
+                    console.log('Clearing previous model viewer');
                     currentModelViewer.clear();
                 }
 
+                console.log('Creating new ModelViewer');
                 currentModelViewer = new ModelViewer('modelViewer');
+                console.log('Loading model into viewer');
                 await currentModelViewer.loadModel(modelId, obj_file, mtl_file, texture_file);
+                console.log('Model loaded successfully');
             } catch (error) {
                 console.error('Error visualizing 3D model:', error);
-                alert('Error visualizing 3D model');
+                if (error.response) {
+                    console.error('Response data:', error.response.data);
+                    console.error('Response status:', error.response.status);
+                }
+                alert('Error visualizing 3D model: ' + error.message);
             }
         }
 
@@ -562,27 +573,43 @@
                 this.controls.screenSpacePanning = false;
                 this.controls.maxPolarAngle = Math.PI / 2;
 
+                // Add ambient light
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                this.scene.add(ambientLight);
+
+                // Add directional light
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                directionalLight.position.set(0, 1, 0);
+                this.scene.add(directionalLight);
+
                 this.animate = this.animate.bind(this);
                 this.animate();
+
+                console.log('ModelViewer initialized');
             }
 
             async loadModel(modelId, objFile, mtlFile, textureFile) {
+                console.log('Loading model:', { modelId, objFile, mtlFile, textureFile });
                 const mtlLoader = new MTLLoader();
                 const objLoader = new OBJLoader();
 
                 try {
+                    console.log('Loading MTL file:', `${API_URL}/models/${modelId}/material`);
                     const materials = await mtlLoader.loadAsync(`${API_URL}/models/${modelId}/material`);
                     materials.preload();
                     objLoader.setMaterials(materials);
 
+                    console.log('Loading OBJ file:', `${API_URL}/models/${modelId}/obj`);
                     const object = await objLoader.loadAsync(`${API_URL}/models/${modelId}/obj`);
 
                     // Center the object
+                    console.log('Model loaded, centering object');
                     const box = new THREE.Box3().setFromObject(object);
                     const center = box.getCenter(new THREE.Vector3());
                     object.position.sub(center);
 
                     this.scene.add(object);
+                    console.log('Object added to scene');
 
                     // Adjust camera to fit the object
                     const size = box.getSize(new THREE.Vector3());
@@ -592,6 +619,7 @@
                     this.camera.position.z = cameraZ * 1.5; // Add some padding
 
                     this.controls.update();
+                    console.log('Camera and controls updated');
                 } catch (error) {
                     console.error('Error loading 3D model:', error);
                     alert('Error loading 3D model');
@@ -608,6 +636,7 @@
                 while(this.scene.children.length > 0) {
                     this.scene.remove(this.scene.children[0]);
                 }
+                console.log('Scene cleared');
             }
         }
 
