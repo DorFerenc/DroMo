@@ -541,7 +541,6 @@
                 if (currentModelViewer) {
                     console.log('Clearing previous model viewer');
                     currentModelViewer.dispose();
-                    // currentModelViewer.clear();
                 }
 
                 console.log('Creating new ModelViewer');
@@ -567,7 +566,7 @@
                 this.container = document.getElementById(containerId);
                 this.scene = new THREE.Scene();
                 this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
-                this.renderer = new THREE.WebGLRenderer();
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
                 this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
                 this.container.appendChild(this.renderer.domElement);
 
@@ -579,6 +578,34 @@
                 this.controls.screenSpacePanning = false;
                 this.controls.maxPolarAngle = Math.PI / 2;
 
+                // // Add ambient light
+                // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                // this.scene.add(ambientLight);
+
+                // // Add directional light
+                // const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                // directionalLight.position.set(0, 1, 0);
+                // this.scene.add(directionalLight);
+
+                this.addLights();
+                this.addAxes();
+                this.addGrid();
+
+                // this.animate = this.animate.bind(this);
+                // this.animationFrameId = null;
+                this.animate = this.animate.bind(this);
+                this.animationFrameId = null;
+                this.isRotating = false;
+                this.loadedObject = null;
+
+                this.animate();
+
+                this.setupEventListeners();
+
+                console.log('ModelViewer initialized');
+            }
+
+            addLights() {
                 // Add ambient light
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
                 this.scene.add(ambientLight);
@@ -587,13 +614,18 @@
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
                 directionalLight.position.set(0, 1, 0);
                 this.scene.add(directionalLight);
-
-                this.animate = this.animate.bind(this);
-                this.animationFrameId = null;
-                this.animate();
-
-                console.log('ModelViewer initialized');
             }
+
+            addAxes() {
+                this.axes = new THREE.AxesHelper(5);
+                this.scene.add(this.axes);
+            }
+
+            addGrid() {
+                this.grid = new THREE.GridHelper(10, 10);
+                this.scene.add(this.grid);
+            }
+
 
             async loadModel(modelId, objFile, mtlFile, textureFile) {
                 console.log('Loading model:', { modelId, objFile, mtlFile, textureFile });
@@ -608,6 +640,11 @@
 
                     console.log('Loading OBJ file:', `${API_URL}/models/${modelId}/obj`);
                     const object = await objLoader.loadAsync(`${API_URL}/models/${modelId}/obj`);
+
+                    if (this.loadedObject) {
+                        this.scene.remove(this.loadedObject);
+                    }
+                    this.loadedObject = object;
 
                     // Center the object
                     console.log('Model loaded, centering object');
@@ -634,27 +671,71 @@
             }
 
             animate() {
-                // requestAnimationFrame(this.animate);
                 this.animationFrameId = requestAnimationFrame(this.animate);
                 this.controls.update();
+
+                if (this.isRotating && this.loadedObject) {
+                    this.loadedObject.rotation.y += 0.01;
+                }
+
                 this.renderer.render(this.scene, this.camera);
             }
 
-            // clear() {
-            //     while(this.scene.children.length > 0) {
-            //         this.scene.remove(this.scene.children[0]);
-            //     }
-            //     console.log('Scene cleared');
-            // }
+            toggleBackground() {
+                if (this.scene.background === null) {
+                    this.scene.background = new THREE.Color(0xffffff);
+                    this.renderer.setClearColor(0xffffff);
+                } else {
+                    this.scene.background = null;
+                    this.renderer.setClearColor(0x000000);
+                }
+            }
+
+            toggleAxes() {
+                this.axes.visible = !this.axes.visible;
+            }
+
+            toggleGrid() {
+                this.grid.visible = !this.grid.visible;
+            }
+
+            toggleWireframe() {
+                if (this.loadedObject) {
+                    this.loadedObject.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            child.material.wireframe = !child.material.wireframe;
+                        }
+                    });
+                }
+            }
+
+            toggleRotation() {
+                this.isRotating = !this.isRotating;
+            }
+
+            setupEventListeners() {
+                const container = this.container.parentElement;
+
+                const createButton = (text, onClick) => {
+                    const button = document.createElement('button');
+                    button.textContent = text;
+                    button.addEventListener('click', onClick);
+                    container.appendChild(button);
+                };
+
+                createButton('Toggle Background', () => this.toggleBackground());
+                createButton('Toggle Axes', () => this.toggleAxes());
+                createButton('Toggle Grid', () => this.toggleGrid());
+                createButton('Toggle Wireframe', () => this.toggleWireframe());
+                createButton('Toggle Rotation', () => this.toggleRotation());
+            }
 
             dispose() {
                 console.log('Disposing ModelViewer');
-                // Stop the animation loop
                 if (this.animationFrameId) {
                     cancelAnimationFrame(this.animationFrameId);
                 }
 
-                // Dispose of Three.js objects
                 this.scene.traverse((object) => {
                     if (object.geometry) {
                         object.geometry.dispose();
@@ -668,16 +749,19 @@
                     }
                 });
 
-                // Dispose of the renderer
                 this.renderer.dispose();
 
-                // Remove the canvas element from the DOM
                 if (this.renderer.domElement && this.renderer.domElement.parentNode) {
                     this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
                 }
 
-                // Dispose of the controls
                 this.controls.dispose();
+
+                // Remove added buttons
+                const container = this.container.parentElement;
+                while (container.lastChild !== this.container) {
+                    container.removeChild(container.lastChild);
+                }
 
                 console.log('ModelViewer disposed');
             }
