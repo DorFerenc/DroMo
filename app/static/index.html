@@ -143,9 +143,13 @@
     <div id="VideoTab" class="tabcontent">
         <div class="section">
             <h2>Upload Video</h2>
-            <input type="text" id="videoTitle" placeholder="Video Title">
-            <input type="file" id="videoFile" accept="video/*">
-            <button onclick="uploadVideo()">Upload</button>
+<!--            <input type="text" id="videoTitle" placeholder="Video Title">-->
+<!--            <input type="file" id="videoFile" accept="video/*">-->
+<!--            <button onclick="uploadVideo()">Upload</button>-->
+            <h2>Upload PLY File</h2>
+            <input type="text" id="plyTitle" placeholder="PLY File Title">
+            <input type="file" id="plyFile" accept=".ply">
+            <button onclick="uploadPLY()">Upload</button>
         </div>
 
         <!-- Section for displaying the list of videos -->
@@ -263,7 +267,34 @@
                 alert(errorMessage);
             }
         }
+        async function uploadPLY() {
+            const title = document.getElementById('plyTitle').value;
+            const file = document.getElementById('plyFile').files[0];
 
+            if (!title || !file) {
+                alert('Please provide both title and file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('file', file);
+
+            try {
+                const response = await axios.post(`${API_URL}/upload`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                alert('PLY file uploaded successfully!');
+                listVideos();
+            } catch (error) {
+                console.error('Error uploading PLY file:', error);
+                let errorMessage = 'Error uploading PLY file';
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                }
+                alert(errorMessage);
+            }
+        }
         /**
          * Fetches the list of videos from the server and updates the UI
          */
@@ -278,6 +309,7 @@
                         <span>${video.title}</span>
                         <div>
                             <button onclick="getVideoDetails('${video.id}')">Details</button>
+                            <button onclick="preprocessPLY('${video.id}')">Preprocess</button>
                             <button class="delete" onclick="deleteVideo('${video.id}')">Delete</button>
                         </div>
                     `;
@@ -307,7 +339,24 @@
                 alert('Error getting video details');
             }
         }
-
+        /**
+         * Sends a request to preprocess a ply
+         * @param {string} id - The ID of the ply to preprocess
+         */
+        async function preprocessPLY(id) {
+            try {
+                const response = await axios.post(`${API_URL}/preprocess/${id}`);
+                alert(`Preprocessing started.\t Status: ${response.data.status}`);
+                // Optionally, you can also add code here to track progress or update UI
+            } catch (error) {
+                console.error('Error preprocessing ply:', error);
+                let errorMessage = 'Error preprocessing video';
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                }
+                alert(errorMessage);
+            }
+        }
         /**
          * Deletes a video from the server
          */
@@ -886,6 +935,8 @@
 
         // Make functions available globally
         window.uploadVideo = uploadVideo;
+        window.preprocessPLY = preprocessPLY;
+        window.uploadPLY = uploadPLY;
         window.listVideos = listVideos;
         window.getVideoDetails = getVideoDetails;
         window.deleteVideo = deleteVideo;

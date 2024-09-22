@@ -522,11 +522,12 @@ core-analyzer
 .*cache
 .*cache/
 
-# yolov3 model
-yolov3/yolov3.weights
-yolov3/yolov3.cfg
-yolov3/coco.names
+# yolov8n model
+yolov8n.pt
 
 #3d_model
 outputs/*
 outputs/
+
+app/points/*
+app/points/

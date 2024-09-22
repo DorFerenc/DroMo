@@ -124,7 +124,7 @@ def process_video(video_id):
         Returns:
             dict: The processed video data if found, None otherwise.
         """
-    result = preprocess_service.process_video(video_id)
+    result = preprocess_service.process_ply(video_id)
     if result:
         return jsonify(result), 200
     else:
