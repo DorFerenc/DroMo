@@ -48,6 +48,7 @@ class PreprocessService:
 
         return {
             'ply_id': ply_id,
+            'processed': True,
             'point_cloud_id': point_cloud_id,
         }
 
@@ -62,10 +63,12 @@ class PreprocessService:
         Returns:
             dict: The progress of the PLY file processing if found, None otherwise.
         """
-        db = get_db()
-        ply_file = db.ply_files.find_one({'_id': ObjectId(ply_id)})
+        ply_file = VideoService.get_video(ply_id)
 
-        if ply_file and 'processed' in ply_file:
+        if not ply_file:
+            return None
+
+        if ply_file :
             return {
                 'ply_id': ply_id,
                 'processed': ply_file.get('processed', False),
