@@ -3,8 +3,6 @@ from app.db.mongodb import get_db
 import os
 from bson import ObjectId
 
-from app.services.ply_service import PLYService
-
 
 class PreprocessService:
     def __init__(self):
@@ -21,34 +19,36 @@ class PreprocessService:
         Returns:
             dict: The processed PLY file data if found, None otherwise.
         """
-        ply_file = PLYService.get_ply(ply_id)
+        db = get_db()
+        ply_file = db.ply_files.find_one({'_id': ObjectId(ply_id)})
+
         if not ply_file:
             return None
 
         input_path = ply_file['file_path']
-        output_dir = os.path.join(os.path.dirname(input_path), f"{ply_id}_processed")
 
-        ply_processor = PLYProcessor()
-        points_processed = ply_processor.process(input_path, output_dir)
+        # Initialize PLY processor
+        ply_processor = PLYProcessor(input_path)
 
-        if points_processed >= 0:
-            # Update PLY file document with processing information
-            db = get_db()
-            db.ply_files.update_one(
-                {'_id': ObjectId(ply_id)},
-                {'$set': {
-                    'processed': True,
-                    'points_processed': points_processed,
-                    'output_directory': output_dir
-                }}
-            )
+        # Remove the background and extract the main object
+        ply_processor.remove_background()
 
-            return {
-                'ply_id': ply_id,
-                'points_processed': points_processed,
-                'output_directory': output_dir
-            }
-        return None
+        # Save the processed point cloud to the database and a CSV file
+        point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])
+
+        # Update the PLY document with processing information
+        db.ply_files.update_one(
+            {'_id': ObjectId(ply_id)},
+            {'$set': {
+                'processed': True,
+                'point_cloud_id': point_cloud_id,
+            }}
+        )
+
+        return {
+            'ply_id': ply_id,
+            'point_cloud_id': point_cloud_id,
+        }
 
     @staticmethod
     def get_progress(ply_id):
@@ -67,7 +67,7 @@ class PreprocessService:
         if ply_file and 'processed' in ply_file:
             return {
                 'ply_id': ply_id,
-                'points_processed': ply_file.get('points_processed', 0),
-                'output_directory': ply_file.get('output_directory', '')
+                'processed': ply_file.get('processed', False),
+                'point_cloud_id': ply_file.get('point_cloud_id', None),
             }
         return None

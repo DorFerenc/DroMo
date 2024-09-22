@@ -1,86 +1,83 @@
 import open3d as o3d
 import numpy as np
-import logging
-import os
+import csv
+from app.db.mongodb import get_db
+from bson import ObjectId
+
+from app.models.point_cloud import PointCloud
+
 
 class PLYProcessor:
-    """
-    Class to process a PLY file, remove background, and extract the main object.
-    """
+    """Handles operations related to processing and saving PLY files."""
 
-    def __init__(self, distance_threshold=0.01, ransac_n=8, num_iterations=1000, cluster_eps=0.05, min_points=100):
+    def __init__(self, ply_file):
+        self.ply_file = ply_file
+        self.main_object = None
+
+    def preprocess(self, distance_threshold=0.01, ransac_n=8, num_iterations=1000, cluster_eps=0.05,
+                          min_points=100):
         """
-        Initialize the PLYProcessor with default or custom parameters.
-
-        Args:
-            distance_threshold (float): Threshold for RANSAC plane segmentation.
-            ransac_n (int): Number of points to sample for RANSAC.
-            num_iterations (int): Number of iterations for RANSAC.
-            cluster_eps (float): Maximum distance for DBSCAN clustering.
-            min_points (int): Minimum points to form a cluster.
+        Remove the background from a point cloud file and extract the main object.
         """
-        self.distance_threshold = distance_threshold
-        self.ransac_n = ransac_n
-        self.num_iterations = num_iterations
-        self.cluster_eps = cluster_eps
-        self.min_points = min_points
+        # Load the point cloud
+        pcd = o3d.io.read_point_cloud(self.ply_file)
 
-    def process(self, ply_file, output_dir):
+        # Apply RANSAC to segment the plane
+        plane_model, inliers = pcd.segment_plane(distance_threshold=distance_threshold,
+                                                 ransac_n=ransac_n,
+                                                 num_iterations=num_iterations)
+
+        # Select the outlier points (which do not belong to the plane)
+        remaining_cloud = pcd.select_by_index(inliers, invert=True)
+
+        # Perform DBSCAN clustering on the remaining points
+        labels = np.array(remaining_cloud.cluster_dbscan(eps=cluster_eps, min_points=min_points))
+
+        if len(labels) == 0:
+            print("Clustering failed. Returning all non-plane points.")
+            self.main_object = remaining_cloud
+            return self.main_object
+
+        # Find the largest cluster (assumed to be the main object)
+        max_label = labels.max()
+        cluster_sizes = [len(labels[labels == i]) for i in range(max_label + 1)]
+        largest_cluster = np.argmax(cluster_sizes)
+
+        # Extract the largest cluster
+        self.main_object = remaining_cloud.select_by_index(np.where(labels == largest_cluster)[0])
+
+        # Visualize the main object (optional)
+        o3d.visualization.draw_geometries([self.main_object])
+
+        return self.main_object
+
+    def save_to_db(self, name='point_cloud'):
         """
-        Process a PLY file, remove the background, and extract the main object.
-
-        Args:
-            ply_file (str): Path to the PLY file.
-            output_dir (str): Directory to save the processed file.
-
-        Returns:
-            int: Number of points in the extracted main object.
+        Save the main object from the PLY file into MongoDB and write it to a CSV file.
         """
-        try:
-            # Ensure the output directory exists
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
+        if self.main_object is None:
+            raise ValueError("Main object not processed yet. Run `remove_background()` first.")
 
-            # Load the point cloud
-            pcd = o3d.io.read_point_cloud(ply_file)
-            logging.info(f"Loaded point cloud from {ply_file}, containing {len(pcd.points)} points.")
+        # Convert point cloud to numpy arrays
+        points = np.asarray(self.main_object.points)  # Shape (N, 3)
+        colors = np.asarray(self.main_object.colors)  # Shape (N, 3)
 
-            # Apply RANSAC to segment the plane
-            plane_model, inliers = pcd.segment_plane(distance_threshold=self.distance_threshold,
-                                                     ransac_n=self.ransac_n,
-                                                     num_iterations=self.num_iterations)
-            logging.info(f"Plane detected with RANSAC, {len(inliers)} points considered part of the plane (background).")
+        # Scale color values from [0, 1] to [0, 255]
+        colors = (colors * 255).astype(np.uint8)
 
-            # Select the outlier points (not part of the plane)
-            remaining_cloud = pcd.select_by_index(inliers, invert=True)
-            logging.info(f"Remaining point cloud contains {len(remaining_cloud.points)} points.")
+        # Combine points and colors
+        combined_array = np.hstack((points, colors))
 
-            # Perform DBSCAN clustering on the remaining points
-            labels = np.array(remaining_cloud.cluster_dbscan(eps=self.cluster_eps, min_points=self.min_points))
+        # Prepare the point data for MongoDB
+        formatted_points = [{'x': float(p[0]), 'y': float(p[1]), 'z': float(p[2]), 'r': int(p[3]), 'g': int(p[4]), 'b': int(p[5])}
+                            for p in combined_array]
 
-            if len(labels) == 0:
-                logging.warning("Clustering failed. Returning all non-plane points.")
-                main_object = remaining_cloud
-            else:
-                # Find the largest cluster
-                max_label = labels.max()
-                logging.info(f"Point cloud has {max_label + 1} clusters.")
-
-                cluster_sizes = [len(labels[labels == i]) for i in range(max_label + 1)]
-                largest_cluster = np.argmax(cluster_sizes)
-
-                # Extract the largest cluster
-                main_object = remaining_cloud.select_by_index(np.where(labels == largest_cluster)[0])
-                logging.info(f"Extracted the largest cluster with {len(main_object.points)} points.")
-
-            # Save the processed point cloud (main object)
-            output_file = os.path.join(output_dir, "main_object.ply")
-            o3d.io.write_point_cloud(output_file, main_object)
-            logging.info(f"Processed point cloud saved to {output_file}.")
-
-            # Return the number of points in the main object for tracking
-            return len(main_object.points)
-
-        except Exception as e:
-            logging.error(f"Error processing PLY file {ply_file}: {e}")
-            return -1
+        # Save PointCloud
+        point_cloud = PointCloud(name, formatted_points)
+        # Write the point cloud data to a CSV file
+        with open('app/points/3d_points.csv', 'w') as f:
+            f.write(point_cloud.to_string())
+        # Insert into MongoDB
+        point_cloud_id = point_cloud.save()
+        print(f"3D reconstruction complete. {len(formatted_points)} points saved to the database with ID {point_cloud_id}.")
+        return point_cloud_id

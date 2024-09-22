@@ -1,6 +1,6 @@
 """Service layer for PLY file-related operations."""
 
-from app.models.ply import PLY
+from app.models.ply import PLYFile
 from bson import ObjectId
 from bson.errors import InvalidId
 from app.db.mongodb import get_db
@@ -20,7 +20,7 @@ class PLYService:
         Returns:
             str: The ID of the created PLY file.
         """
-        ply = PLY(title=title, file_path=file_path)
+        ply = PLYFile(title=title, file_path=file_path)
         return ply.save()
 
     @staticmethod
@@ -35,7 +35,7 @@ class PLYService:
             dict: The PLY file data if found, None otherwise.
         """
         try:
-            return PLY.get_by_id(ply_id)
+            return PLYFile.get_by_id(ply_id)
         except InvalidId:
             return None
 
