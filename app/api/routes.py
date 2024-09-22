@@ -278,6 +278,7 @@ def get_model(model_id):
     """Retrieve a specific 3D model."""
     model = ThreeDModel.get_by_id(model_id)
     if model:
+        current_app.logger.info(f"GET -> Model found: {model.name}")
         return jsonify({
             'id': str(model.id),
             'name': model.name,
@@ -297,6 +298,7 @@ def delete_model(model_id):
     model = ThreeDModel.get_by_id(model_id)
     if model:
         # Delete associated files
+        current_app.logger.info(f"DELETE -> Model found: {model.name}")
         for file_path in [model.obj_file, model.mtl_file, model.texture_file]:
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
@@ -329,20 +331,26 @@ def download_model(model_id):
 @api_bp.route('/api/models/<model_id>/texture', methods=['GET'])
 def download_texture(model_id):
     """Download the texture file of a specific 3D model."""
+    current_app.logger.info(f"Attempting to download texture for model: {model_id}")
     model = ThreeDModel.get_by_id(model_id)
     if model and model.texture_file and os.path.exists(model.texture_file):
+        current_app.logger.info(f"Texture found: {model.texture_file}")
         return send_file(model.texture_file, as_attachment=True)
     else:
+        current_app.logger.error(f"Texture file not found for model: {model_id}")
         return jsonify({'error': '3D model or texture file not found'}), 404
 
 
 @api_bp.route('/api/models/<model_id>/material', methods=['GET'])
 def download_material(model_id):
     """Download the material (MTL) file of a specific 3D model."""
+    current_app.logger.info(f"Attempting to download material for model: {model_id}")
     model = ThreeDModel.get_by_id(model_id)
     if model and model.mtl_file and os.path.exists(model.mtl_file):
+        current_app.logger.info(f"Material found: {model.mtl_file}")
         return send_file(model.mtl_file, as_attachment=True)
     else:
+        current_app.logger.error(f"Material file not found for model: {model_id}")
         return jsonify({'error': '3D model or material file not found'}), 404
 
 @api_bp.route('/api/models/<model_id>/obj', methods=['GET'])
@@ -356,15 +364,17 @@ def get_model_obj(model_id):
     abort(404)
 
 
-@api_bp.route('/api/models/<model_id>/<filename>', methods=['GET'])
-def get_model_file(model_id, filename):
-    """Serve model files (OBJ, MTL, or texture)."""
-    model = ThreeDModel.get_by_id(model_id)
-    if not model:
-        abort(404, description="Model not found")
 
-    file_path = os.path.join(model.folder_path, filename)
-    if not os.path.exists(file_path):
-        abort(404, description=f"File {filename} not found for model {model_id}")
 
-    return send_file(file_path)
+# @api_bp.route('/api/models/<model_id>/<filename>', methods=['GET'])
+# def get_model_file(model_id, filename):
+#     """Serve model files (OBJ, MTL, or texture)."""
+#     model = ThreeDModel.get_by_id(model_id)
+#     if not model:
+#         abort(404, description="Model not found")
+
+#     file_path = os.path.join(model.folder_path, filename)
+#     if not os.path.exists(file_path):
+#         abort(404, description=f"File {filename} not found for model {model_id}")
+
+#     return send_file(file_path)
