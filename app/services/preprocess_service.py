@@ -1,9 +1,9 @@
-from app.preprocess.videos_to_frames import FrameExtractor
+from app.preprocess.ply_preprocess import PLYProcessor
 from app.db.mongodb import get_db
 import os
 from bson import ObjectId
 
-from app.services.video_service import VideoService
+from app.services.ply_service import PLYService
 
 
 class PreprocessService:
@@ -11,59 +11,63 @@ class PreprocessService:
         pass
 
     @staticmethod
-    def process_video(video_id):
+    def process_ply(ply_id):
         """
-               Process a video.
-                Args:
-                    video_id (str): The ID of the video to process.
-                Returns:
-                    dict: The processed video data if found, None otherwise.
-                """
-        video = VideoService.get_video(video_id)
-        if not video:
+        Process a PLY file.
+
+        Args:
+            ply_id (str): The ID of the PLY file to process.
+
+        Returns:
+            dict: The processed PLY file data if found, None otherwise.
+        """
+        ply_file = PLYService.get_ply(ply_id)
+        if not ply_file:
             return None
 
-        input_path = video['file_path']
-        output_dir = os.path.join(os.path.dirname(input_path), f"{video_id}_frames")
+        input_path = ply_file['file_path']
+        output_dir = os.path.join(os.path.dirname(input_path), f"{ply_id}_processed")
 
-        frameExtractor = FrameExtractor()
-        frames_processed = frameExtractor.extract_relevant_frames(input_path, output_dir)
+        ply_processor = PLYProcessor()
+        points_processed = ply_processor.process(input_path, output_dir)
 
-        if frames_processed >= 0:
-            # Update video document with processing information
+        if points_processed >= 0:
+            # Update PLY file document with processing information
             db = get_db()
-            db.videos.update_one(
-                {'_id': ObjectId(video_id)},
+            db.ply_files.update_one(
+                {'_id': ObjectId(ply_id)},
                 {'$set': {
                     'processed': True,
-                    'frames_processed': frames_processed,
-                    'frames_directory': output_dir
+                    'points_processed': points_processed,
+                    'output_directory': output_dir
                 }}
             )
 
             return {
-                'video_id': video_id,
-                'frames_processed': frames_processed,
-                'frames_directory': output_dir
+                'ply_id': ply_id,
+                'points_processed': points_processed,
+                'output_directory': output_dir
             }
         return None
 
     @staticmethod
-    def get_progress(video_id):
+    def get_progress(ply_id):
         """
-        Get the progress of video processing.
+        Get the progress of PLY file processing.
+
         Args:
-            video_id (str): The ID of the video.
+            ply_id (str): The ID of the PLY file.
+
         Returns:
-            dict: The progress of the video processing if found, None otherwise.
+            dict: The progress of the PLY file processing if found, None otherwise.
         """
         db = get_db()
-        video = db.videos.find_one({'_id': ObjectId(video_id)})
+        ply_file = db.ply_files.find_one({'_id': ObjectId(ply_id)})
 
-        if video and 'processed' in video:
+        if ply_file and 'processed' in ply_file:
             return {
-                'video_id': video_id,
-                'frames_processed': video.get('frames_processed', 0),
-                'frames_directory': video.get('frames_directory', '')
+                'ply_id': ply_id,
+                'points_processed': ply_file.get('points_processed', 0),
+                'output_directory': ply_file.get('output_directory', '')
             }
         return None
