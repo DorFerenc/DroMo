@@ -3,6 +3,8 @@ from app.db.mongodb import get_db
 import os
 from bson import ObjectId
 
+from app.services.video_service import VideoService
+
 
 class PreprocessService:
     def __init__(self):
@@ -19,8 +21,7 @@ class PreprocessService:
         Returns:
             dict: The processed PLY file data if found, None otherwise.
         """
-        db = get_db()
-        ply_file = db.ply_files.find_one({'_id': ObjectId(ply_id)})
+        ply_file = VideoService.get_video(ply_id)
 
         if not ply_file:
             return None
@@ -31,19 +32,19 @@ class PreprocessService:
         ply_processor = PLYProcessor(input_path)
 
         # Remove the background and extract the main object
-        ply_processor.remove_background()
+        ply_processor.preprocess()
 
         # Save the processed point cloud to the database and a CSV file
         point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])
 
-        # Update the PLY document with processing information
-        db.ply_files.update_one(
-            {'_id': ObjectId(ply_id)},
-            {'$set': {
-                'processed': True,
-                'point_cloud_id': point_cloud_id,
-            }}
-        )
+        # # Update the PLY document with processing information
+        # db.ply_files.update_one(
+        #     {'_id': ObjectId(ply_id)},
+        #     {'$set': {
+        #         'processed': True,
+        #         'point_cloud_id': point_cloud_id,
+        #     }}
+        # )
 
         return {
             'ply_id': ply_id,

@@ -285,7 +285,7 @@
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
                 alert('PLY file uploaded successfully!');
-                listPLYFiles(); // Update this function to list PLY files, similar to how you list videos
+                listVideos();
             } catch (error) {
                 console.error('Error uploading PLY file:', error);
                 let errorMessage = 'Error uploading PLY file';
@@ -309,6 +309,7 @@
                         <span>${video.title}</span>
                         <div>
                             <button onclick="getVideoDetails('${video.id}')">Details</button>
+                            <button onclick="preprocessPLY('${video.id}')">Preprocess</button>
                             <button class="delete" onclick="deleteVideo('${video.id}')">Delete</button>
                         </div>
                     `;
@@ -338,7 +339,24 @@
                 alert('Error getting video details');
             }
         }
-
+        /**
+         * Sends a request to preprocess a ply
+         * @param {string} id - The ID of the ply to preprocess
+         */
+        async function preprocessPLY(id) {
+            try {
+                const response = await axios.post(`${API_URL}/preprocess/${id}`);
+                alert(`Preprocessing started.\t Status: ${response.data.status}`);
+                // Optionally, you can also add code here to track progress or update UI
+            } catch (error) {
+                console.error('Error preprocessing ply:', error);
+                let errorMessage = 'Error preprocessing video';
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                }
+                alert(errorMessage);
+            }
+        }
         /**
          * Deletes a video from the server
          */
@@ -917,6 +935,7 @@
 
         // Make functions available globally
         window.uploadVideo = uploadVideo;
+        window.preprocessPLY = preprocessPLY;
         window.uploadPLY = uploadPLY;
         window.listVideos = listVideos;
         window.getVideoDetails = getVideoDetails;
