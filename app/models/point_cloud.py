@@ -96,6 +96,21 @@ class PointCloud:
         data = self.points if self.colors is None else np.hstack((self.points, self.colors))
         return header + '\n' + '\n'.join(','.join(map(str, row)) for row in data)
 
+    def to_csv(self):
+        """Convert the point cloud to a CSV string."""
+        header = 'x,y,z'
+        if self.colors is not None:
+            header += ',r,g,b'
+
+        csv_rows = [header]
+        for i in range(len(self.points)):
+            row = f"{self.points[i][0]},{self.points[i][1]},{self.points[i][2]}"
+            if self.colors is not None:
+                row += f",{self.colors[i][0]},{self.colors[i][1]},{self.colors[i][2]}"
+            csv_rows.append(row)
+
+        return '\n'.join(csv_rows)
+
 ###########################################################################################
 # This PointCloud class is designed to handle both colored and non-colored point clouds. Here's a breakdown of its features:
 

@@ -36,45 +36,47 @@ UPLOAD_FOLDER=/app/uploads
 
 ### API Endpoint Chart
 
-| Resource | Address | Method | Parameters | Responses | Status Codes |
-| -------- | ------- | ------ | ---------- | --------- | ------------ |
-| Upload Visual Data | `/api/upload` | POST | - `title`: String<br>- `file`: Multipart Video | - `message`: Upload success<br>- `video_id`: MongoDB ID | 200, 400, 500 |
-| List all videos | `/api/videos` | GET | None | Array of video objects | 200, 500 |
-| Get video details | `/api/videos/<id>` | GET | - `id`: String (Video ID) | Video object | 200, 404, 500 |
-| Delete a video | `/api/videos/<id>` | DELETE | - `id`: String (Video ID) | - `message`: Deletion success | 200, 404, 500 |
-| Monitor Video Processing Progress | `/api/progress/<id>` | GET | - `id`: String (Video ID) | - `video_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| Preprocess Video to Point Cloud | `/api/preprocess/<id>` | POST | - `id`: String (Video ID) | - `message`: Preprocessing started<br>- `point_cloud_id`: String | 200, 404, 500 |
-| Monitor Preprocessing Progress | `/api/preprocess/progress/<id>` | GET | - `id`: String (Point Cloud ID) | - `point_cloud_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| Upload Point Cloud | `/api/point_clouds` | POST | - `name`: String<br>- `file`: Multipart File (.txt or .csv) | - `message`: Upload success<br>- `point_cloud_id`: MongoDB ID | 200, 400, 500 |
-| List all Point Clouds | `/api/point_clouds` | GET | None | Array of point cloud objects | 200, 500 |
-| Get Point Cloud details | `/api/point_clouds/<id>` | GET | - `id`: String (Point Cloud ID) | Point cloud object | 200, 400, 404 |
-| Delete a Point Cloud | `/api/point_clouds/<id>` | DELETE | - `id`: String (Point Cloud ID) | - `message`: Deletion success | 200, 400, 404 |
-| Reconstruct 3D Model | `/api/reconstruct/<id>` | POST | - `id`: String (Point Cloud ID) | - `message`: Reconstruction started<br>- `model_id`: String | 200, 404, 500 |
-| Monitor Reconstruction Progress | `/api/reconstruct/progress/<id>` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `progress`: int (0-100)<br>- `status`: String | 200, 404, 500 |
-| List all 3D Models | `/api/models` | GET | None | Array of 3D model objects | 200, 500 |
-| Get 3D Model details | `/api/models/<id>` | GET | - `id`: String (Model ID) | 3D model object | 200, 404, 500 |
-| Display 3D Model | `/api/models/<id>/display` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `display_data`: Object | 200, 404, 500 |
-| Export 3D Model | `/api/models/<id>/export` | GET | - `id`: String (Model ID) | - `model_id`: String<br>- `file_path`: String<br>- `metadata`: Object | 200, 404, 500 |
-| Delete a 3D Model | `/api/models/<id>` | DELETE | - `id`: String (Model ID) | - `message`: Deletion success | 200, 404, 500 |
+| Endpoint | Method | Parameters | Response | Codes |
+|----------|--------|------------|----------|-------|
+| `/api/upload` | POST | `title`: Str (opt)<br>`file`: File | `message`, `video_id` | 200, 400 |
+| `/api/videos` | GET | - | Array of video objects | 200 |
+| `/api/videos/<id>` | GET | `id`: Str | Video object | 200, 404 |
+| `/api/videos/<id>` | DELETE | `id`: Str | `message` | 200, 404 |
+| `/api/preprocess/<id>` | POST | `id`: Str | Processed video data | 200, 404 |
+| `/api/preprocess/progress/<id>` | GET | `id`: Str | Progress info | 200, 404 |
+| `/api/point_clouds` | POST | `name`: Str (opt)<br>`file`: File | `message`, `point_cloud_id` | 200, 400 |
+| `/api/point_clouds` | GET | - | Array of point cloud objects | 200 |
+| `/api/point_clouds/<id>` | GET | `id`: Str | Point cloud object | 200, 400, 404 |
+| `/api/point_clouds/<id>` | DELETE | `id`: Str | `message` | 200, 400, 404 |
+| `/api/point_clouds/<id>/download` | GET | `id`: Str | CSV file | 200, 404, 500 |
+| `/api/reconstruct/<id>` | POST | `id`: Str | `message`, `model_id` | 200, 404, 500 |
+| `/api/models` | GET | - | Array of 3D model objects | 200 |
+| `/api/models/<id>` | GET | `id`: Str | 3D model object | 200, 404 |
+| `/api/models/<id>` | DELETE | `id`: Str | `message` | 200, 404, 500 |
+| `/api/models/<id>/download` | GET | `id`: Str | OBJ file | 200, 404 |
+| `/api/models/<id>/texture` | GET | `id`: Str | Texture file | 200, 404 |
+| `/api/models/<id>/material` | GET | `id`: Str | MTL file | 200, 404 |
+| `/api/models/<id>/obj` | GET | `id`: Str | OBJ file | 200, 404 |
 
 ### Structure
 ```
-Dromo_Structure/
 ├── app
 │   ├── __init__.py
-│   ├── config.py
 │   ├── api
 │   │   ├── __init__.py
-│   │   ├── routes.py
+│   │   └── routes.py
+│   ├── config.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   └── mongodb.py
 │   ├── models
 │   │   ├── __init__.py
+│   │   ├── ply.py
 │   │   ├── point_cloud.py
 │   │   ├── threed_model.py
 │   │   └── video.py
 │   ├── preprocess
+│   │   ├── ply_preprocess.py
 │   │   └── videos_to_frames.py
 │   ├── reconstruction
 │   │   ├── __init__.py
@@ -84,6 +86,7 @@ Dromo_Structure/
 │   │   └── texture_mapper.py
 │   ├── services
 │   │   ├── __init__.py
+│   │   ├── ply_service.py
 │   │   ├── preprocess_service.py
 │   │   ├── reconstruction_service.py
 │   │   └── video_service.py
@@ -92,16 +95,20 @@ Dromo_Structure/
 ├── Dockerfile
 ├── README.md
 ├── docker-compose.yml
+├── outputs
 ├── requirements.txt
 ├── run.py
 ├── tests
 │   ├── __init__.py
+│   ├── ply
+│   │   └── input.ply
 │   ├── test_api.py
 │   ├── test_point_cloud.py
-│   └── test_reconstruction_api.py
-├── uploads
-│   └── test_video.mp4
-└── yolov3
+│   ├── test_preprocess.py
+│   ├── test_reconstruction_api.py
+│   └── test_threed_model_api.py
+└── uploads
+    └── Mouse-floor.ply
 ```
 
 ### 🚀 Build smarter, not harder! → Upgrade docker speed
@@ -133,4 +140,5 @@ use dromo
 show collections
 db.videos.find()
 db.point_clouds.find()
+db.point_clouds.find({}, {name: 1, _id: 0})
 ```

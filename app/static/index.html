@@ -434,6 +434,7 @@
                             <button onclick="getPointCloudDetails('${pc.id}')">Details</button>
                             <button class="delete" onclick="deletePointCloud('${pc.id}')">Delete</button>
                             <button onclick="reconstructPointCloud('${pc.id}')">Reconstruct</button>
+                            <button onclick="downloadPointCloud('${pc.id}')">Download CSV</button>
                         </div>
                     `;
                     pointCloudList.appendChild(li);
@@ -442,6 +443,13 @@
                 console.error('Error listing point clouds:', error);
                 alert('Error listing point clouds');
             }
+        }
+
+        /**
+         * Initiates download of the point cloud data as a CSV file
+         */
+        function downloadPointCloud(id) {
+            window.location.href = `${API_URL}/point_clouds/${id}/download`;
         }
 
         /**
@@ -941,6 +949,7 @@
         window.getVideoDetails = getVideoDetails;
         window.deleteVideo = deleteVideo;
         window.uploadPointCloud = uploadPointCloud;
+        window.downloadPointCloud = downloadPointCloud;
         window.reconstructPointCloud = reconstructPointCloud;
         window.listPointClouds = listPointClouds;
         window.getPointCloudDetails = getPointCloudDetails;

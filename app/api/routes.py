@@ -1,7 +1,6 @@
 """API routes for the DROMO system."""
 
-from flask import Blueprint, request, jsonify, current_app, send_file, abort
-from flask import Blueprint, request, jsonify, current_app, send_file, abort
+from flask import Blueprint, request, jsonify, current_app, send_file, abort, Response
 from werkzeug.utils import secure_filename
 from app.db.mongodb import get_db
 from app.services.video_service import VideoService
@@ -11,6 +10,7 @@ from app.models.threed_model import ThreeDModel
 from app.services.preprocess_service import PreprocessService
 from bson import ObjectId, errors as bson_errors
 import os
+import traceback
 
 
 api_bp = Blueprint('api', __name__)
@@ -222,6 +222,30 @@ def delete_point_cloud(point_cloud_id):
             return jsonify({'error': 'Point cloud not found'}), 404
     except bson_errors.InvalidId:
         return jsonify({'error': 'Invalid point cloud ID'}), 400
+
+@api_bp.route('/api/point_clouds/<point_cloud_id>/download', methods=['GET'])
+def download_point_cloud(point_cloud_id):
+    """Download the point cloud data as a CSV file."""
+    try:
+        current_app.logger.info(f"Attempting to download point cloud with ID: {point_cloud_id}")
+        pc = PointCloud.get_by_id(point_cloud_id)
+        if pc:
+            current_app.logger.info(f"Point cloud found: {pc.name}")
+            csv_data = pc.to_csv()
+            current_app.logger.info(f"CSV data generated, size: {len(csv_data)} bytes")
+            return Response(
+                csv_data,
+                mimetype="text/csv",
+                headers={"Content-disposition":
+                         f"attachment; filename={pc.name}.csv"}
+            )
+        else:
+            current_app.logger.warning(f"Point cloud not found for ID: {point_cloud_id}")
+            return jsonify({'error': 'Point cloud not found'}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error downloading point cloud: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({'error': 'Error downloading point cloud', 'details': str(e)}), 500
 
 ########################################################################
 # Reconstruction
