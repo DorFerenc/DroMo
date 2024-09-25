@@ -14,12 +14,13 @@ class PLYProcessor:
         self.ply_file = ply_file
         self.main_object = None
 
-    def preprocess(self, distance_threshold=0.01, ransac_n=3, num_iterations=1000, cluster_eps=0.02,
+    def preprocess(self, distance_threshold=0.015, ransac_n=3, num_iterations=1000, cluster_eps=0.02,
                           min_points=50):
         """
         Remove the background from a point cloud file and extract the main object.
         """
         pcd = self.load_point_cloud()
+        self.main_object = pcd
         # Center the point cloud
         center_pcd = self.center_point_cloud(pcd)
         # Remove statistical outliers
@@ -29,16 +30,21 @@ class PLYProcessor:
         # Estimate normals
         filtered_pcd = self.estimate_normals(filtered_pcd)
         #
-        self.segment_plane(filtered_pcd, distance_threshold, ransac_n, num_iterations)
-        remaining_cloud = self.get_remaining_cloud(pcd)
+        remaining_cloud = self.segment_plane(filtered_pcd, distance_threshold, ransac_n, num_iterations)
+        # remaining_cloud = self.get_remaining_cloud()
         #
-        self.cluster_points(remaining_cloud, cluster_eps, min_points)
+        main_object = self.cluster_points(remaining_cloud, cluster_eps, min_points)
         #
-        self.main_object = self.complete_bottom(self.main_object)
+        main_object = self.remove_statistical_outliers(main_object, nn =30, std_multiplier=2.0)
+        main_object = self.center_point_cloud(main_object)
+        main_object = self.estimate_normals(main_object, max_nn=16)
+        self.main_object = main_object
 
-        self.main_object = self.center_point_cloud(self.main_object)
+        main_object = self.complete_bottom(main_object)
 
-        return self.main_object
+        main_object = self.center_point_cloud(main_object)
+        self.main_object = main_object
+        return main_object
 
 
     def load_point_cloud(self):
@@ -79,7 +85,7 @@ class PLYProcessor:
 
         return downsampled_pcd
 
-    def estimate_normals(self, pcd):
+    def estimate_normals(self, pcd, max_nn=30):
         """
         Estimate normals for the point cloud.
         :param pcd: Input point cloud.
@@ -88,7 +94,7 @@ class PLYProcessor:
         nn_distance = np.mean(pcd.compute_nearest_neighbor_distance())
         radius_normals = nn_distance * 10
         pcd.estimate_normals(
-            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normals, max_nn=30),
+            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normals, max_nn=max_nn),
             fast_normal_computation=True
         )
         logging.info("Normals estimated for the point cloud.")
@@ -101,9 +107,9 @@ class PLYProcessor:
                                                  ransac_n=ransac_n,
                                                  num_iterations=num_iterations)
         logging.info("Plane segmentation completed.")
-        self.main_object = pcd.select_by_index(inliers, invert=True)  # Store non-plane points
+        return pcd.select_by_index(inliers, invert=True)
 
-    def get_remaining_cloud(self, pcd):
+    def get_remaining_cloud(self):
         """Return the remaining cloud (non-plane points) after plane segmentation."""
         logging.info("Extracting remaining points from the point cloud.")
         return self.main_object
@@ -115,8 +121,8 @@ class PLYProcessor:
 
         if len(labels) == 0:
             logging.warning("Clustering failed. Returning all non-plane points.")
-            self.main_object = remaining_cloud
-            return
+            return remaining_cloud
+
 
         # Find the largest cluster (assumed to be the main object)
         max_label = labels.max()
@@ -125,8 +131,9 @@ class PLYProcessor:
         largest_cluster = np.argmax(cluster_sizes)
 
         # Extract the largest cluster
-        self.main_object = remaining_cloud.select_by_index(np.where(labels == largest_cluster)[0])
+        main_object = remaining_cloud.select_by_index(np.where(labels == largest_cluster)[0])
         logging.info("Largest cluster extracted successfully.")
+        return main_object
 
     def complete_bottom(self, pcd, resolution=0.005, depth=0.005):
         """Complete the bottom of the object."""
@@ -146,7 +153,7 @@ class PLYProcessor:
         logging.info("Convex hull computed successfully.")
         return hull
 
-    def sample_hull_surface(self, hull, num_samples=4000):
+    def sample_hull_surface(self, hull, num_samples=6000):
         """Sample points from the convex hull surface."""
         logging.info("Sampling points from the convex hull surface.")
         sample_points = hull.sample_points_uniformly(number_of_points=num_samples)
