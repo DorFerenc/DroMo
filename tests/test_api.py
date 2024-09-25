@@ -62,7 +62,7 @@ def test_upload_visual_data_success(client, mongo):
     """
     data = {
         'title': 'Test Video',
-        'file': (BytesIO(b'fake video content'), 'test_video.mp4')
+        'file': (BytesIO(b'fake video content'), 'test_video.ply')
     }
     response = client.post('/api/upload', data=data, content_type='multipart/form-data')
     assert response.status_code == 200
@@ -141,7 +141,7 @@ def test_video_retrieval(client, mongo):
     # First, upload a video
     upload_data = {
         'title': 'Retrieval Test Video',
-        'file': (BytesIO(b'fake video content for retrieval'), 'retrieval_test.mp4')
+        'file': (BytesIO(b'fake video content for retrieval'), 'retrieval_test.ply')
     }
     upload_response = client.post('/api/upload', data=upload_data, content_type='multipart/form-data')
     upload_result = json.loads(upload_response.data.decode('utf-8'))
