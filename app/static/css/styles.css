@@ -177,6 +177,30 @@ li:hover {
     display: none;
 }
 
+.collapsible h2 {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collapse-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.collapsible.collapsed .content {
+    display: none;
+}
+
+.collapsible.collapsed .collapse-btn i {
+    transform: rotate(180deg);
+}
+
 @media (max-width: 768px) {
     .tab {
         flex-direction: column;

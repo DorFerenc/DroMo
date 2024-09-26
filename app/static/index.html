@@ -43,14 +43,18 @@
                     <input type="text" id="plyTitle" placeholder="PLY File Title">
                     <button id="uploadPLYBtn" class="button">Upload</button>
                 </div>
-                <div class="section">
-                    <h2>Video List</h2>
-                    <button id="refreshVideoListBtn" class="button"><i class="fas fa-sync"></i> Refresh Video List</button>
-                    <ul id="videoList"></ul>
+                <div class="section collapsible">
+                    <h2>Video List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <button id="refreshVideoListBtn" class="button"><i class="fas fa-sync"></i> Refresh Video List</button>
+                        <ul id="videoList"></ul>
+                    </div>
                 </div>
-                <div class="section">
-                    <h2>Video Details</h2>
-                    <div id="videoDetails"></div>
+                <div class="section collapsible">
+                    <h2>Video Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <div id="videoDetails"></div>
+                    </div>
                 </div>
             </div>
 
@@ -66,30 +70,40 @@
                     <input type="text" id="pointCloudName" placeholder="Point Cloud Name">
                     <button id="uploadPointCloudBtn" class="button">Upload</button>
                 </div>
-                <div class="section">
-                    <h2>Point Cloud List</h2>
-                    <button id="refreshPointCloudListBtn" class="button"><i class="fas fa-sync"></i> Refresh Point Cloud List</button>
-                    <ul id="pointCloudList"></ul>
+                <div class="section collapsible">
+                    <h2>Point Cloud List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <button id="refreshPointCloudListBtn" class="button"><i class="fas fa-sync"></i> Refresh Point Cloud List</button>
+                        <ul id="pointCloudList"></ul>
+                    </div>
                 </div>
-                <div class="section">
-                    <h2>Point Cloud Details</h2>
-                    <div id="pointCloudDetails"></div>
+                <div class="section collapsible">
+                    <h2>Point Cloud Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <div id="pointCloudDetails"></div>
+                    </div>
                 </div>
             </div>
 
             <div id="ModelTab" class="tabcontent">
-                <div class="section">
-                    <h2>3D Model List</h2>
-                    <button id="refreshModelListBtn" class="button"><i class="fas fa-sync"></i> Refresh 3D Model List</button>
-                    <ul id="modelList"></ul>
+                <div class="section collapsible">
+                    <h2>3D Model List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <button id="refreshModelListBtn" class="button"><i class="fas fa-sync"></i> Refresh 3D Model List</button>
+                        <ul id="modelList"></ul>
+                    </div>
                 </div>
-                <div class="section">
-                    <h2>3D Model Details</h2>
-                    <div id="modelDetails"></div>
+                <div class="section collapsible">
+                    <h2>3D Model Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <div id="modelDetails"></div>
+                    </div>
                 </div>
-                <div class="section">
-                    <h2>3D Model Visualization</h2>
-                    <div id="modelViewer"></div>
+                <div class="section collapsible">
+                    <h2>3D Model Visualization <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <div id="modelViewer"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,6 +135,28 @@
                 document.getElementById(tabName).style.display = "block";
                 evt.currentTarget.classList.add("active");
             }
+
+            // Add collapsible functionality
+            document.querySelectorAll('.collapsible').forEach(section => {
+                const header = section.querySelector('h2');
+                const content = section.querySelector('.content');
+                const btn = header.querySelector('.collapse-btn');
+
+                header.addEventListener('click', (e) => {
+                    if (e.target !== btn && e.target !== btn.querySelector('i')) {
+                        section.classList.toggle('collapsed');
+                        btn.querySelector('i').classList.toggle('fa-chevron-down');
+                        btn.querySelector('i').classList.toggle('fa-chevron-up');
+                    }
+                });
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    section.classList.toggle('collapsed');
+                    btn.querySelector('i').classList.toggle('fa-chevron-down');
+                    btn.querySelector('i').classList.toggle('fa-chevron-up');
+                });
+            });
 
             // Improved drag and drop functionality for file uploads
             ['plyUploadArea', 'pointCloudUploadArea'].forEach(areaId => {
