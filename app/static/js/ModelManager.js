@@ -94,6 +94,9 @@ class ModelManager {
                 window.currentModelViewer.dispose();
             }
 
+            // Trigger the reconstruction process visualization
+            document.dispatchEvent(new CustomEvent('showReconstructionProcess', { detail: { modelId: id } }));
+
             window.currentModelViewer = new ModelViewer('modelViewer');
             await window.currentModelViewer.loadModel(id, obj_file, mtl_file, texture_file);
         } catch (error) {

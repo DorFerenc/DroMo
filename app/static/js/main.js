@@ -3,6 +3,7 @@ import NotificationSystem from './NotificationSystem.js';
 import VideoManager from './VideoManager.js';
 import PointCloudManager from './PointCloudManager.js';
 import ModelManager from './ModelManager.js';
+import ReconstructionProcess from './ReconstructionProcess.js';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -12,11 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoManager = new VideoManager(apiService, notificationSystem);
     const pointCloudManager = new PointCloudManager(apiService, notificationSystem);
     const modelManager = new ModelManager(apiService, notificationSystem);
+    const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
 
     // Make manager instances globally accessible
     window.videoManager = videoManager;
     window.pointCloudManager = pointCloudManager;
     window.modelManager = modelManager;
+    window.reconstructionProcess = reconstructionProcess;
 
     // Initialize managers (if they have init methods)
     if (typeof videoManager.init === 'function') videoManager.init();
@@ -33,6 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabLinks.length > 0) {
         openTab({ currentTarget: tabLinks[0] }, tabLinks[0].dataset.tab);
     }
+
+    // Set up event listener for showing reconstruction process
+    document.addEventListener('showReconstructionProcess', (event) => {
+        const modelId = event.detail.modelId;
+        reconstructionProcess.showProcess(modelId);
+    });
 });
 
 function openTab(evt, tabName) {

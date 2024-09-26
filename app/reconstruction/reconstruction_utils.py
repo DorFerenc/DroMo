@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import logging
+from flask import current_app
+
 
 logger = logging.getLogger(__name__)
 
@@ -82,3 +84,4 @@ def generate_colors(points, method='height'):
         return colors
     else:
         raise ValueError(f"Unknown color generation method: {method}")
+
