@@ -3,6 +3,7 @@ class ReconstructionProcess {
         this.container = document.getElementById(containerId);
         this.apiService = apiService;
         this.currentStep = 0;
+        this.modelId = null;
         this.steps = [
             {
                 title: "Point Cloud Visualization",
@@ -34,7 +35,6 @@ class ReconstructionProcess {
     setupUI() {
         this.container.classList.add('reconstruction-process', 'tabcontent');
         this.container.innerHTML = `
-            <h2>3D Object Reconstruction Process</h2>
             <div class="progress-bar">
                 <span class="progress" style="width: 25%;"></span>
             </div>
@@ -54,15 +54,31 @@ class ReconstructionProcess {
         this.nextButton.addEventListener('click', () => this.nextStep());
     }
 
+    // async showProcess(modelId) {
+    //     this.modelId = modelId;
+    //     this.container.style.display = 'block';
+    //     this.currentStep = 0;
+    //     this.updateNavigation();
+
+    //     // Start loading all data asynchronously
+    //     this.loadAllStepData();
+
+    //     // Display the first step
+    //     this.updateStep(this.currentStep);
+    // }
+
     async showProcess(modelId) {
-        this.modelId = modelId;
+        if (this.modelId !== modelId) {
+            // Only reset and reload if it's a different model
+            this.modelId = modelId;
+            this.currentStep = 0;
+            this.cachedData = {};
+            // Start loading all data asynchronously
+            this.loadAllStepData();
+        }
+
         this.container.style.display = 'block';
-        this.currentStep = 0;
         this.updateNavigation();
-
-        // Start loading all data asynchronously
-        this.loadAllStepData();
-
         // Display the first step
         this.updateStep(this.currentStep);
     }
@@ -165,6 +181,7 @@ class ReconstructionProcess {
         this.container.querySelector('.progress').style.width = '25%';
         this.currentStep = 0;
         this.updateNavigation();
+        this.modelId = null;
         this.cachedData = {}; // Clear the cache when clearing visualization
     }
 

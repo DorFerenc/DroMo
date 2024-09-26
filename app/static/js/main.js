@@ -51,4 +51,9 @@ function openTab(evt, tabName) {
 
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.classList.add("active");
+
+    // If switching to the ModelTab and there's an active reconstruction, restore it
+    if (tabName === 'ModelTab' && modelManager.hasActiveReconstruction()) {
+        modelManager.restoreReconstructionProcess();
+    }
 }
