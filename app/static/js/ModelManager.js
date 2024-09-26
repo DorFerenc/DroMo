@@ -2,9 +2,10 @@ import DromoUtils from './DromoUtils.js';
 import ModelViewer from './ModelViewer.js';
 
 class ModelManager {
-    constructor(apiService, notificationSystem) {
+    constructor(apiService, notificationSystem, reconstructionProcess) {
         this.apiService = apiService;
         this.notificationSystem = notificationSystem;
+        this.reconstructionProcess = reconstructionProcess;
         this.modelList = document.getElementById('modelList');
         this.modelDetails = document.getElementById('modelDetails');
         this.initEventListeners();
@@ -94,11 +95,19 @@ class ModelManager {
                 window.currentModelViewer.dispose();
             }
 
+            // Clear old visualization data in ReconstructionProcess
+            this.reconstructionProcess.clearVisualization();
             // Trigger the reconstruction process visualization
-            document.dispatchEvent(new CustomEvent('showReconstructionProcess', { detail: { modelId: id } }));
+            this.reconstructionProcess.showProcess(id);
 
             window.currentModelViewer = new ModelViewer('modelViewer');
             await window.currentModelViewer.loadModel(id, obj_file, mtl_file, texture_file);
+
+            // Switch to the ReconstructionProcess tab
+            const reconstructionTab = document.querySelector('[data-tab="reconstruction-process-container"]');
+            if (reconstructionTab) {
+                reconstructionTab.click();
+            }
         } catch (error) {
             this.notificationSystem.show('Error visualizing 3D model: ' + error.message, 'error');
         }

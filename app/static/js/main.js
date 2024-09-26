@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationSystem = new NotificationSystem();
     const videoManager = new VideoManager(apiService, notificationSystem);
     const pointCloudManager = new PointCloudManager(apiService, notificationSystem);
-    const modelManager = new ModelManager(apiService, notificationSystem);
     const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
+    const modelManager = new ModelManager(apiService, notificationSystem, reconstructionProcess);
 
     // Make manager instances globally accessible
     window.videoManager = videoManager;
@@ -36,12 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabLinks.length > 0) {
         openTab({ currentTarget: tabLinks[0] }, tabLinks[0].dataset.tab);
     }
-
-    // Set up event listener for showing reconstruction process
-    document.addEventListener('showReconstructionProcess', (event) => {
-        const modelId = event.detail.modelId;
-        reconstructionProcess.showProcess(modelId);
-    });
 });
 
 function openTab(evt, tabName) {

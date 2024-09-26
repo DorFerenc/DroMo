@@ -27,27 +27,21 @@ class ReconstructionProcess {
         ];
 
         this.cachedData = {};
-        this.loadingStates = this.steps.map(() => true);
-
         this.setupUI();
         this.setupEventListeners();
     }
 
     setupUI() {
-        this.container.classList.add('reconstruction-process', 'section', 'collapsible');
+        this.container.classList.add('reconstruction-process', 'tabcontent');
         this.container.innerHTML = `
-            <h2>3D Object Reconstruction Process <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
-            <div class="content">
-                <div class="progress-bar">
-                    <span class="progress" style="width: 25%;"></span>
-                </div>
-                <div id="step-container"></div>
-                <div id="loader" class="loader hidden"></div>
-                <div class="navigation">
-                    <button id="prev-step-btn" class="button"><i class="fas fa-chevron-left"></i> Previous</button>
-                    <button id="clear-cache-btn" class="button"><i class="fas fa-sync"></i> Clear Cache</button>
-                    <button id="next-step-btn" class="button">Next <i class="fas fa-chevron-right"></i></button>
-                </div>
+            <h2>3D Object Reconstruction Process</h2>
+            <div class="progress-bar">
+                <span class="progress" style="width: 25%;"></span>
+            </div>
+            <div id="step-container"></div>
+            <div class="navigation">
+                <button id="prev-step-btn" class="button"><i class="fas fa-chevron-left"></i> Previous</button>
+                <button id="next-step-btn" class="button">Next <i class="fas fa-chevron-right"></i></button>
             </div>
         `;
     }
@@ -55,28 +49,9 @@ class ReconstructionProcess {
     setupEventListeners() {
         this.prevButton = this.container.querySelector('#prev-step-btn');
         this.nextButton = this.container.querySelector('#next-step-btn');
-        this.clearCacheButton = this.container.querySelector('#clear-cache-btn');
-        this.collapseButton = this.container.querySelector('.collapse-btn');
 
         this.prevButton.addEventListener('click', () => this.prevStep());
         this.nextButton.addEventListener('click', () => this.nextStep());
-        this.clearCacheButton.addEventListener('click', () => this.clearCache());
-
-        // Add collapsible functionality
-        const content = this.container.querySelector('.content');
-        this.collapseButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.container.classList.toggle('collapsed');
-            this.collapseButton.querySelector('i').classList.toggle('fa-chevron-down');
-            this.collapseButton.querySelector('i').classList.toggle('fa-chevron-up');
-        });
-
-        // Allow clicking on the entire header to collapse/expand
-        this.container.querySelector('h2').addEventListener('click', (e) => {
-            if (e.target !== this.collapseButton && e.target !== this.collapseButton.querySelector('i')) {
-                this.collapseButton.click();
-            }
-        });
     }
 
     async showProcess(modelId) {
@@ -84,21 +59,45 @@ class ReconstructionProcess {
         this.container.style.display = 'block';
         this.currentStep = 0;
         this.updateNavigation();
-        await this.updateStep(this.currentStep);
-        // Ensure the section is expanded when showing the process
-        this.container.classList.remove('collapsed');
-        this.collapseButton.querySelector('i').classList.remove('fa-chevron-down');
-        this.collapseButton.querySelector('i').classList.add('fa-chevron-up');
+
+        // Start loading all data asynchronously
+        this.loadAllStepData();
+
+        // Display the first step
+        this.updateStep(this.currentStep);
     }
 
-    async updateStep(step) {
+    loadAllStepData() {
+        this.steps.forEach((step, index) => {
+            if (!this.cachedData[step.dataUrl + this.modelId]) {
+                this.apiService.get(step.dataUrl + this.modelId)
+                    .then(data => {
+                        this.cachedData[step.dataUrl + this.modelId] = data;
+                        if (index === this.currentStep) {
+                            this.updateStep(this.currentStep);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error loading data for step ${index + 1}:`, error);
+                    });
+            }
+        });
+    }
+
+    updateStep(step) {
         this.updateStepContent(step);
         this.container.querySelector('.progress').style.width = `${(step + 1) * (100 / this.steps.length)}%`;
 
-        if (this.cachedData[this.steps[step].dataUrl + this.modelId]) {
-            this.createPlot(`plot-${step}`, this.cachedData[this.steps[step].dataUrl + this.modelId]);
+        const plotElement = this.container.querySelector(`#plot-${step}`);
+        if (plotElement) {
+            Plotly.purge(plotElement);
+        }
+
+        const data = this.cachedData[this.steps[step].dataUrl + this.modelId];
+        if (data) {
+            this.createPlot(`plot-${step}`, data);
         } else {
-            await this.loadStepData(step);
+            this.showLoadingIndicator(`plot-${step}`);
         }
     }
 
@@ -112,21 +111,6 @@ class ReconstructionProcess {
                 <div class="explanation">${this.steps[step].explanation}</div>
             </div>
         `;
-    }
-
-    async loadStepData(step) {
-        if (!this.loadingStates[step]) return; // Already loaded
-
-        try {
-            const data = await this.apiService.get(this.steps[step].dataUrl + this.modelId);
-            this.cachedData[this.steps[step].dataUrl + this.modelId] = data;
-            this.createPlot(`plot-${step}`, data);
-        } catch (error) {
-            console.error('Error loading step data:', error);
-        }
-
-        this.loadingStates[step] = false;
-        this.updateLoaderVisibility();
     }
 
     createPlot(elementId, data) {
@@ -145,23 +129,28 @@ class ReconstructionProcess {
         Plotly.newPlot(elementId, data, layout);
     }
 
-    updateLoaderVisibility() {
-        const isAnyStepLoading = this.loadingStates.some(state => state);
-        this.container.querySelector('#loader').style.display = isAnyStepLoading ? 'block' : 'none';
+    showLoadingIndicator(elementId) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>Loading data...</p>
+            </div>
+        `;
     }
 
-    async nextStep() {
+    nextStep() {
         if (this.currentStep < this.steps.length - 1) {
             this.currentStep++;
-            await this.updateStep(this.currentStep);
+            this.updateStep(this.currentStep);
             this.updateNavigation();
         }
     }
 
-    async prevStep() {
+    prevStep() {
         if (this.currentStep > 0) {
             this.currentStep--;
-            await this.updateStep(this.currentStep);
+            this.updateStep(this.currentStep);
             this.updateNavigation();
         }
     }
@@ -171,20 +160,12 @@ class ReconstructionProcess {
         this.nextButton.disabled = this.currentStep === this.steps.length - 1;
     }
 
-    async clearCache() {
-        try {
-            const response = await this.apiService.post('/clear_cache');
-            if (response.status === "success") {
-                alert(response.message);
-                this.cachedData = {};
-                this.loadingStates = this.steps.map(() => true);
-            } else {
-                alert("Failed to clear cache.");
-            }
-        } catch (error) {
-            console.error("Error clearing cache:", error);
-            alert("Error clearing cache.");
-        }
+    clearVisualization() {
+        this.container.querySelector('#step-container').innerHTML = '';
+        this.container.querySelector('.progress').style.width = '25%';
+        this.currentStep = 0;
+        this.updateNavigation();
+        this.cachedData = {}; // Clear the cache when clearing visualization
     }
 
     hide() {
