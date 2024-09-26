@@ -10,7 +10,12 @@ from app.models.threed_model import ThreeDModel
 from app.services.preprocess_service import PreprocessService
 from bson import ObjectId, errors as bson_errors
 import os
+import numpy as np
+import pyvista as pv
 import traceback
+from PIL import Image
+from app.services.recon_proc_visualization_service import ReconProcVisualizationService
+
 
 
 api_bp = Blueprint('api', __name__)
@@ -402,3 +407,39 @@ def get_model_obj(model_id):
 #         abort(404, description=f"File {filename} not found for model {model_id}")
 
 #     return send_file(file_path)
+
+########################################################################
+# 3D Model with plotly API
+########################################################################
+
+@api_bp.route('/api/reconstruction/point_cloud/<model_id>')
+def get_point_cloud_data(model_id):
+    current_app.logger.info(f"Getting point cloud data for model: {model_id}")
+    data = ReconProcVisualizationService.get_point_cloud_data(model_id)
+    if data is None:
+        return jsonify({"error": "Model or point cloud not found"}), 404
+    return jsonify([data])
+
+@api_bp.route('/api/reconstruction/initial_mesh/<model_id>')
+def get_initial_mesh_data(model_id):
+    current_app.logger.info(f"Getting initial mesh data for model: {model_id}")
+    data = ReconProcVisualizationService.get_mesh_data(model_id, mesh_type='initial')
+    if data is None:
+        return jsonify({"error": "Model not found"}), 404
+    return jsonify(data)
+
+@api_bp.route('/api/reconstruction/refined_mesh/<model_id>')
+def get_refined_mesh_data(model_id):
+    current_app.logger.info(f"Getting refined mesh data for model: {model_id}")
+    data = ReconProcVisualizationService.get_mesh_data(model_id, mesh_type='refined')
+    if data is None:
+        return jsonify({"error": "Model not found"}), 404
+    return jsonify(data)
+
+@api_bp.route('/api/reconstruction/textured_mesh/<model_id>')
+def get_textured_mesh_data(model_id):
+    current_app.logger.info(f"Getting textured mesh data for model: {model_id}")
+    data = ReconProcVisualizationService.get_textured_mesh_data(model_id)
+    if data is None:
+        return jsonify({"error": "Model not found"}), 404
+    return jsonify(data)

@@ -3,6 +3,7 @@ import NotificationSystem from './NotificationSystem.js';
 import VideoManager from './VideoManager.js';
 import PointCloudManager from './PointCloudManager.js';
 import ModelManager from './ModelManager.js';
+import ReconstructionProcess from './ReconstructionProcess.js';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -11,12 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationSystem = new NotificationSystem();
     const videoManager = new VideoManager(apiService, notificationSystem);
     const pointCloudManager = new PointCloudManager(apiService, notificationSystem);
-    const modelManager = new ModelManager(apiService, notificationSystem);
+    const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
+    const modelManager = new ModelManager(apiService, notificationSystem, reconstructionProcess);
 
     // Make manager instances globally accessible
     window.videoManager = videoManager;
     window.pointCloudManager = pointCloudManager;
     window.modelManager = modelManager;
+    window.reconstructionProcess = reconstructionProcess;
 
     // Initialize managers (if they have init methods)
     if (typeof videoManager.init === 'function') videoManager.init();
@@ -48,4 +51,9 @@ function openTab(evt, tabName) {
 
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.classList.add("active");
+
+    // If switching to the ModelTab and there's an active reconstruction, restore it
+    if (tabName === 'ModelTab' && modelManager.hasActiveReconstruction()) {
+        modelManager.restoreReconstructionProcess();
+    }
 }

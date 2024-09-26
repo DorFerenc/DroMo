@@ -13,8 +13,10 @@
         }
     }
     </script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/reconstruction-process.css">
 </head>
 <body>
     <header>
@@ -85,6 +87,9 @@
                 </div>
             </div>
 
+            <!-- <div id="reconstruction-process-container" class="tabcontent" style="display: none;"> -->
+            <!-- <div id="reconstruction-process-container" class="tabcontent"></div> -->
+
             <div id="ModelTab" class="tabcontent">
                 <div class="section collapsible">
                     <h2>3D Model List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
@@ -97,6 +102,12 @@
                     <h2>3D Model Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
                     <div class="content">
                         <div id="modelDetails"></div>
+                    </div>
+                </div>
+                <div class="section collapsible">
+                    <h2>3D Object Reconstruction Process Visualization <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <div class="content">
+                        <div id="reconstruction-process-container"></div>
                     </div>
                 </div>
                 <div class="section collapsible">

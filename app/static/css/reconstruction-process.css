@@ -1,0 +1,94 @@
+.reconstruction-process {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.reconstruction-process h2 {
+    margin-bottom: 20px;
+}
+
+.reconstruction-process .progress-bar {
+    width: 100%;
+    background-color: #e0e0e0;
+    padding: 3px;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, .2);
+    margin-bottom: 20px;
+}
+
+.reconstruction-process .progress {
+    display: block;
+    height: 22px;
+    background-color: #659cef;
+    border-radius: 3px;
+    transition: width 500ms ease-in-out;
+}
+
+.reconstruction-process .loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.reconstruction-process .hidden {
+    display: none;
+}
+
+.reconstruction-process .step-number {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.reconstruction-process .plot {
+    width: 100%;
+    height: 400px;
+}
+
+.reconstruction-process .explanation {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.reconstruction-process .technical {
+    font-style: italic;
+    color: #666;
+}
+
+.reconstruction-process .navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.reconstruction-process .button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.reconstruction-process .button:hover {
+    background-color: #0056b3;
+}
+
+.reconstruction-process .button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

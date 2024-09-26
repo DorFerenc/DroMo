@@ -15,3 +15,4 @@ pillow==8.3.0
 multiprocessing-logging==0.3.1
 opencv-python==4.5.3.56
 open3d==0.15.2
+plotly==5.5.0

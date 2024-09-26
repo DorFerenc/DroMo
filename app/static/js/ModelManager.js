@@ -2,11 +2,13 @@ import DromoUtils from './DromoUtils.js';
 import ModelViewer from './ModelViewer.js';
 
 class ModelManager {
-    constructor(apiService, notificationSystem) {
+    constructor(apiService, notificationSystem, reconstructionProcess) {
         this.apiService = apiService;
         this.notificationSystem = notificationSystem;
+        this.reconstructionProcess = reconstructionProcess;
         this.modelList = document.getElementById('modelList');
         this.modelDetails = document.getElementById('modelDetails');
+        this.activeModelId = null;
         this.initEventListeners();
     }
 
@@ -94,10 +96,35 @@ class ModelManager {
                 window.currentModelViewer.dispose();
             }
 
+            // // Clear old visualization data in ReconstructionProcess
+            // this.reconstructionProcess.clearVisualization();
+            // Update the active model ID
+            this.activeModelId = id;
+            // Trigger the reconstruction process visualization
+            this.reconstructionProcess.showProcess(id);
+
             window.currentModelViewer = new ModelViewer('modelViewer');
             await window.currentModelViewer.loadModel(id, obj_file, mtl_file, texture_file);
+
+            // Switch to the ModelTab
+            const modelTab = document.querySelector('[data-tab="ModelTab"]');
+            if (modelTab) {
+                modelTab.click();
+            }
         } catch (error) {
             this.notificationSystem.show('Error visualizing 3D model: ' + error.message, 'error');
+        }
+    }
+
+    // check if there's an active reconstruction
+    hasActiveReconstruction() {
+        return this.activeModelId !== null;
+    }
+
+    // restore the reconstruction process
+    restoreReconstructionProcess() {
+        if (this.hasActiveReconstruction()) {
+            this.reconstructionProcess.showProcess(this.activeModelId);
         }
     }
 }
