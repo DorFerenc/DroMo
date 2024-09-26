@@ -34,7 +34,9 @@ def create_app(config_class=Config):
     Returns:
         Flask: Configured Flask application instance
     """
-    app = Flask(__name__)
+    # app = Flask(__name__)
+    app = Flask(__name__, static_folder='static', static_url_path='')
+
     app.config.from_object(config_class)
 
     # Initialize extensions
