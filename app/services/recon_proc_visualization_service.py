@@ -9,6 +9,16 @@ from app.models.point_cloud import PointCloud
 
 class ReconProcVisualizationService:
     @staticmethod
+    def numpy_to_python(obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+
+    @staticmethod
     def get_point_cloud_data(model_id):
         model = ThreeDModel.get_by_id(model_id)
         if not model:
@@ -23,12 +33,12 @@ class ReconProcVisualizationService:
         return {
             'type': 'scatter3d',
             'mode': 'markers',
-            'x': point_cloud.points[:, 0].tolist(),
-            'y': point_cloud.points[:, 1].tolist(),
-            'z': point_cloud.points[:, 2].tolist(),
+            'x': ReconProcVisualizationService.numpy_to_python(point_cloud.points[:, 0]),
+            'y': ReconProcVisualizationService.numpy_to_python(point_cloud.points[:, 1]),
+            'z': ReconProcVisualizationService.numpy_to_python(point_cloud.points[:, 2]),
             'marker': {
                 'size': 1.5,
-                'color': point_cloud.colors.tolist() if point_cloud.colors is not None else 'rgb(100, 100, 100)',
+                'color': ReconProcVisualizationService.numpy_to_python(point_cloud.colors) if point_cloud.colors is not None else 'rgb(100, 100, 100)',
                 'opacity': 1
             }
         }
@@ -42,7 +52,7 @@ class ReconProcVisualizationService:
 
         current_app.logger.info(f"Loading OBJ file: {model.obj_file}")
         mesh = pv.read(model.obj_file)
-        mesh_data = ThreeDVisualizationService.extract_mesh_data(mesh)
+        mesh_data = ReconProcVisualizationService.extract_mesh_data(mesh)
 
         if mesh_type == 'initial':
             color = 'rgb(255, 165, 0)'
@@ -51,7 +61,7 @@ class ReconProcVisualizationService:
         else:
             color = 'rgb(100, 100, 100)'
 
-        return ThreeDVisualizationService.create_mesh_data(mesh_data, surface_color=color, wireframe_color='rgb(0, 0, 0)')
+        return ReconProcVisualizationService.create_mesh_data(mesh_data, surface_color=color, wireframe_color='rgb(0, 0, 0)')
 
     @staticmethod
     def get_textured_mesh_data(model_id):
@@ -62,7 +72,7 @@ class ReconProcVisualizationService:
 
         current_app.logger.info(f"Loading OBJ file: {model.obj_file}")
         mesh = pv.read(model.obj_file)
-        mesh_data = ThreeDVisualizationService.extract_mesh_data(mesh)
+        mesh_data = ReconProcVisualizationService.extract_mesh_data(mesh)
 
         current_app.logger.info(f"Processing texture: {model.texture_file}")
         try:
@@ -88,13 +98,13 @@ class ReconProcVisualizationService:
 
         return [{
             'type': 'mesh3d',
-            'x': mesh_data['points'][:, 0].tolist(),
-            'y': mesh_data['points'][:, 1].tolist(),
-            'z': mesh_data['points'][:, 2].tolist(),
-            'i': mesh_data['faces'][:, 0].tolist(),
-            'j': mesh_data['faces'][:, 1].tolist(),
-            'k': mesh_data['faces'][:, 2].tolist(),
-            'vertexcolor': mesh_data['point_data']['RGB'].tolist(),
+            'x': ReconProcVisualizationService.numpy_to_python(mesh_data['points'][:, 0]),
+            'y': ReconProcVisualizationService.numpy_to_python(mesh_data['points'][:, 1]),
+            'z': ReconProcVisualizationService.numpy_to_python(mesh_data['points'][:, 2]),
+            'i': ReconProcVisualizationService.numpy_to_python(mesh_data['faces'][:, 0]),
+            'j': ReconProcVisualizationService.numpy_to_python(mesh_data['faces'][:, 1]),
+            'k': ReconProcVisualizationService.numpy_to_python(mesh_data['faces'][:, 2]),
+            'vertexcolor': ReconProcVisualizationService.numpy_to_python(mesh_data['point_data']['RGB']),
             'flatshading': False,
             'lighting': {
                 'ambient': 0.8,
@@ -121,12 +131,12 @@ class ReconProcVisualizationService:
         current_app.logger.info("Creating mesh data")
         surface = {
             'type': 'mesh3d',
-            'x': mesh_data['points'][:, 0].tolist(),
-            'y': mesh_data['points'][:, 1].tolist(),
-            'z': mesh_data['points'][:, 2].tolist(),
-            'i': mesh_data['faces'][:, 0].tolist(),
-            'j': mesh_data['faces'][:, 1].tolist(),
-            'k': mesh_data['faces'][:, 2].tolist(),
+            'x': ReconProcVisualizationService.numpy_to_python(mesh_data['points'][:, 0]),
+            'y': ReconProcVisualizationService.numpy_to_python(mesh_data['points'][:, 1]),
+            'z': ReconProcVisualizationService.numpy_to_python(mesh_data['points'][:, 2]),
+            'i': ReconProcVisualizationService.numpy_to_python(mesh_data['faces'][:, 0]),
+            'j': ReconProcVisualizationService.numpy_to_python(mesh_data['faces'][:, 1]),
+            'k': ReconProcVisualizationService.numpy_to_python(mesh_data['faces'][:, 2]),
             'color': surface_color,
             'flatshading': True,
             'lighting': {
@@ -156,8 +166,8 @@ class ReconProcVisualizationService:
         for face in mesh_data['faces']:
             for i in range(3):
                 p1, p2 = mesh_data['points'][face[i]], mesh_data['points'][face[(i + 1) % 3]]
-                wireframe['x'].extend([p1[0], p2[0], None])
-                wireframe['y'].extend([p1[1], p2[1], None])
-                wireframe['z'].extend([p1[2], p2[2], None])
+                wireframe['x'].extend([ReconProcVisualizationService.numpy_to_python(p1[0]), ReconProcVisualizationService.numpy_to_python(p2[0]), None])
+                wireframe['y'].extend([ReconProcVisualizationService.numpy_to_python(p1[1]), ReconProcVisualizationService.numpy_to_python(p2[1]), None])
+                wireframe['z'].extend([ReconProcVisualizationService.numpy_to_python(p1[2]), ReconProcVisualizationService.numpy_to_python(p2[2]), None])
 
         return [surface, wireframe]
