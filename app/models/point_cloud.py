@@ -111,6 +111,18 @@ class PointCloud:
 
         return '\n'.join(csv_rows)
 
+    @staticmethod
+    def list_all():
+        """
+        Retrieve all point clouds from the database.
+
+        Returns:
+        pymongo.cursor.Cursor: A cursor for all point clouds in the database.
+        """
+        db = get_db()
+        return db.point_clouds.find()
+
+
 ###########################################################################################
 # This PointCloud class is designed to handle both colored and non-colored point clouds. Here's a breakdown of its features:
 

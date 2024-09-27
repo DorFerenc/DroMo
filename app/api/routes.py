@@ -205,8 +205,7 @@ def get_point_cloud(point_cloud_id: str):
 @api_bp.route('/api/point_clouds', methods=['GET'])
 def list_point_clouds():
     """List all point clouds."""
-    db = get_db()
-    point_clouds = db.point_clouds.find()
+    point_clouds = PointCloud.list_all()
     return jsonify([{
         'id': str(pc['_id']),
         'name': pc['name'],
