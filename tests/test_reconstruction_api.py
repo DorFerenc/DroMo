@@ -1,3 +1,15 @@
+import warnings
+import numpy as np
+
+# Suppress specific DeprecationWarnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="vtkmodules.util.numpy_support")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="numpy.core.numeric")
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
+# Patch numpy bool to avoid deprecation warning
+np.bool = bool
+
 import pytest
 from app import create_app
 from app.db.mongodb import get_db

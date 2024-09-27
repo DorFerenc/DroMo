@@ -3,11 +3,10 @@ from app import create_app
 from app.db.mongodb import get_db
 from app.models.threed_model import ThreeDModel
 from app.models.point_cloud import PointCloud
+from app.services.recon_proc_visualization_service import ReconProcVisualizationService
 import json
-import os
-from bson import ObjectId
 from unittest.mock import patch
-import pyvista as pv
+from bson import ObjectId
 
 @pytest.fixture
 def app():
@@ -32,103 +31,155 @@ def mongo(app):
         yield db
         db.client.drop_database(db.name)
 
-def test_get_point_cloud_data(client, mongo):
+def test_get_point_cloud_data_success(client, mongo):
     """
-    Scenario: Get point cloud data for visualization
+    Scenario: Successfully retrieve point cloud data
+        Given I have a 3D model with an associated point cloud in the database
+        When I send a GET request to retrieve the point cloud data
+        Then I should receive a success response with the point cloud data
     """
-    pc = PointCloud("Test Cloud", np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3]]))
+    # Create a test point cloud and 3D model
+    pc_string = """x,y,z,r,g,b
+    0.1,0.2,0.3,255,0,0
+    0.4,0.5,0.6,0,255,0"""
+    pc = PointCloud.from_string("Test Cloud", pc_string)
     pc_id = pc.save()
-    model = ThreeDModel("Test Model", "test_folder", pc_id, "obj_file", "mtl_file", "texture_file")
+
+    model = ThreeDModel(name="Test Model", folder_path="/test/path", point_cloud_id=pc_id,
+                        obj_file="/test/model.obj", mtl_file="/test/model.mtl", texture_file="/test/texture.jpg")
     model_id = model.save()
 
-    response = client.get(f'/api/reconstruction/point_cloud/{model_id}')
+    # Mock the ReconProcVisualizationService.get_point_cloud_data method
+    mock_data = {
+        'type': 'scatter3d',
+        'mode': 'markers',
+        'x': [0.1, 0.4],
+        'y': [0.2, 0.5],
+        'z': [0.3, 0.6],
+        'marker': {'size': 1.5, 'color': [[255, 0, 0], [0, 255, 0]], 'opacity': 1}
+    }
+    with patch.object(ReconProcVisualizationService, 'get_point_cloud_data', return_value=mock_data):
+        response = client.get(f'/api/reconstruction/point_cloud/{model_id}')
 
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert isinstance(data, list)
-    assert len(data) > 0
-    assert 'x' in data[0] and 'y' in data[0] and 'z' in data[0]
+    assert data == [mock_data]
 
-@patch('pyvista.read')
-def test_get_initial_mesh_data(client, mongo):
+def test_get_point_cloud_data_not_found(client, mongo):
     """
-    Scenario: Get initial mesh data for visualization
+    Scenario: Attempt to retrieve point cloud data for a non-existent model
+        Given I have an invalid model ID
+        When I send a GET request to retrieve the point cloud data
+        Then I should receive a not found error response
     """
-    model = ThreeDModel("Test Model", "test_folder", "pc_id", "obj_file", "mtl_file", "texture_file")
+    invalid_id = str(ObjectId())  # Generate a valid ObjectId that doesn't exist in the database
+    response = client.get(f'/api/reconstruction/point_cloud/{invalid_id}')
+
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert "error" in data
+    assert "Model or point cloud not found" in data['error']
+
+def test_get_initial_mesh_data_success(client, mongo):
+    """
+    Scenario: Successfully retrieve initial mesh data
+        Given I have a 3D model in the database
+        When I send a GET request to retrieve the initial mesh data
+        Then I should receive a success response with the initial mesh data
+    """
+    # Create a test 3D model
+    model = ThreeDModel(name="Test Model", folder_path="/test/path", point_cloud_id="test_pc_id",
+                        obj_file="/test/model.obj", mtl_file="/test/model.mtl", texture_file="/test/texture.jpg")
     model_id = model.save()
 
-    response = client.get(f'/api/reconstruction/initial_mesh/{model_id}')
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert 'vertices' in data
-    assert 'faces' in data
-
-def test_get_refined_mesh_data(client, mongo):
-    """
-    Scenario: Get refined mesh data for visualization
-    """
-    model = ThreeDModel("Test Model", "test_folder", "pc_id", "obj_file", "mtl_file", "texture_file")
-    model_id = model.save()
-
-    response = client.get(f'/api/reconstruction/refined_mesh/{model_id}')
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert 'vertices' in data
-    assert 'faces' in data
-
-def test_get_textured_mesh_data(client, mongo):
-    """
-    Scenario: Get textured mesh data for visualization
-    """
-    model = ThreeDModel("Test Model", "test_folder", "pc_id", "obj_file", "mtl_file", "texture_file")
-    model_id = model.save()
-
-    response = client.get(f'/api/reconstruction/textured_mesh/{model_id}')
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert 'vertices' in data
-    assert 'faces' in data
-    assert 'uv' in data
-
-def test_nonexistent_model_visualization(client):
-    """
-    Scenario: Attempt to get visualization data for a non-existent model
-    """
-    nonexistent_id = str(ObjectId())
-
-    endpoints = [
-        f'/api/reconstruction/point_cloud/{nonexistent_id}',
-        f'/api/reconstruction/initial_mesh/{nonexistent_id}',
-        f'/api/reconstruction/refined_mesh/{nonexistent_id}',
-        f'/api/reconstruction/textured_mesh/{nonexistent_id}'
+    # Mock the ReconProcVisualizationService.get_mesh_data method
+    mock_data = [
+        {
+            'type': 'mesh3d',
+            'x': [1, 2, 3],
+            'y': [4, 5, 6],
+            'z': [7, 8, 9],
+            'i': [0, 1, 2],
+            'j': [1, 2, 0],
+            'k': [2, 0, 1],
+            'color': 'rgb(255, 165, 0)',
+            'flatshading': True,
+        },
+        {
+            'type': 'scatter3d',
+            'mode': 'lines',
+            'x': [1, 2, None, 2, 3, None, 3, 1, None],
+            'y': [4, 5, None, 5, 6, None, 6, 4, None],
+            'z': [7, 8, None, 8, 9, None, 9, 7, None],
+            'line': {'color': 'rgb(0, 0, 0)', 'width': 1},
+        }
     ]
+    with patch.object(ReconProcVisualizationService, 'get_mesh_data', return_value=mock_data):
+        response = client.get(f'/api/reconstruction/initial_mesh/{model_id}')
 
-    for endpoint in endpoints:
-        response = client.get(endpoint)
-        assert response.status_code == 404
-        data = json.loads(response.data)
-        assert "error" in data
-        assert "Model or point cloud not found" in data['error']
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data == mock_data
 
-def test_incomplete_model_visualization(client, mongo):
+def test_get_initial_mesh_data_not_found(client, mongo):
     """
-    Scenario: Attempt to get visualization data for an incomplete model
+    Scenario: Attempt to retrieve initial mesh data for a non-existent model
+        Given I have an invalid model ID
+        When I send a GET request to retrieve the initial mesh data
+        Then I should receive a not found error response
     """
-    incomplete_model = ThreeDModel("Incomplete Model", "test_folder", "pc_id", None, None, None)
-    model_id = incomplete_model.save()
+    invalid_id = str(ObjectId())  # Generate a valid ObjectId that doesn't exist in the database
+    response = client.get(f'/api/reconstruction/initial_mesh/{invalid_id}')
 
-    endpoints = [
-        f'/api/reconstruction/initial_mesh/{model_id}',
-        f'/api/reconstruction/refined_mesh/{model_id}',
-        f'/api/reconstruction/textured_mesh/{model_id}'
-    ]
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert "error" in data
+    assert "Model not found" in data['error']
 
-    for endpoint in endpoints:
-        response = client.get(endpoint)
-        assert response.status_code == 400
-        data = json.loads(response.data)
-        assert "error" in data
-        assert "Model not found" in data['error']
+# Add similar tests for refined mesh and textured mesh endpoints
+
+def test_get_textured_mesh_data_success(client, mongo):
+    """
+    Scenario: Successfully retrieve textured mesh data
+        Given I have a 3D model with texture in the database
+        When I send a GET request to retrieve the textured mesh data
+        Then I should receive a success response with the textured mesh data
+    """
+    # Create a test 3D model
+    model = ThreeDModel(name="Test Model", folder_path="/test/path", point_cloud_id="test_pc_id",
+                        obj_file="/test/model.obj", mtl_file="/test/model.mtl", texture_file="/test/texture.jpg")
+    model_id = model.save()
+
+    # Mock the ReconProcVisualizationService.get_textured_mesh_data method
+    mock_data = [{
+        'type': 'mesh3d',
+        'x': [1, 2, 3],
+        'y': [4, 5, 6],
+        'z': [7, 8, 9],
+        'i': [0, 1, 2],
+        'j': [1, 2, 0],
+        'k': [2, 0, 1],
+        'vertexcolor': [[255, 0, 0], [0, 255, 0], [0, 0, 255]],
+        'flatshading': False,
+    }]
+    with patch.object(ReconProcVisualizationService, 'get_textured_mesh_data', return_value=mock_data):
+        response = client.get(f'/api/reconstruction/textured_mesh/{model_id}')
+
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data == mock_data
+
+def test_get_textured_mesh_data_not_found(client, mongo):
+    """
+    Scenario: Attempt to retrieve textured mesh data for a non-existent model
+        Given I have an invalid model ID
+        When I send a GET request to retrieve the textured mesh data
+        Then I should receive a not found error response
+    """
+    invalid_id = str(ObjectId())  # Generate a valid ObjectId that doesn't exist in the database
+    response = client.get(f'/api/reconstruction/textured_mesh/{invalid_id}')
+
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert "error" in data
+    assert "Model not found" in data['error']

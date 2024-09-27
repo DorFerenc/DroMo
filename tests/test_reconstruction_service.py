@@ -1,3 +1,15 @@
+import warnings
+import numpy as np
+
+# Suppress specific DeprecationWarnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="vtkmodules.util.numpy_support")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="numpy.core.numeric")
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
+# Patch numpy bool to avoid deprecation warning
+np.bool = bool
+
 import pytest
 from app import create_app
 from app.db.mongodb import get_db
@@ -6,19 +18,12 @@ from app.services.reconstruction_service import ReconstructionService
 from bson import ObjectId
 import json
 from unittest.mock import patch, MagicMock
-import numpy as np
 import pyvista as pv
 from app.reconstruction.point_cloud_to_mesh import PointCloudToMesh
 from app.reconstruction.texture_mapper import TextureMapper
 from app.reconstruction.mesh_to_obj_converter import MeshToOBJConverter
 from app.reconstruction.reconstruction_utils import generate_colors
-import warnings
 
-# Suppress numpy deprecation warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-# Suppress numpy deprecation warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 @pytest.fixture
 def app():
