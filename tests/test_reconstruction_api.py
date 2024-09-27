@@ -1,3 +1,15 @@
+import warnings
+import numpy as np
+
+# Suppress specific DeprecationWarnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="vtkmodules.util.numpy_support")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="numpy.core.numeric")
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
+# Patch numpy bool to avoid deprecation warning
+np.bool = bool
+
 import pytest
 from app import create_app
 from app.db.mongodb import get_db
@@ -92,3 +104,27 @@ def test_reconstruct_server_error(client, mongo):
     data = json.loads(response.data)
     assert "error" in data
     assert data['error'] == "Internal server error"
+
+# Add these new test functions
+
+def test_reconstruct_with_parameters(client, mongo):
+    """
+    Scenario: Reconstruct with different parameters
+    """
+    pc_string = """x,y,z,r,g,b
+    0.1,0.2,0.3,255,0,0
+    0.4,0.5,0.6,0,255,0
+    0.7,0.8,0.9,0,0,255
+    1.0,1.1,1.2,255,255,255
+    """
+    pc = PointCloud.from_string("Test Cloud", pc_string)
+    pc_id = pc.save()
+
+    params = {
+        'resolution': 'high',
+        'smoothing': 0.5
+    }
+    response = client.post(f'/api/reconstruct/{pc_id}', json=params)
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert 'model_id' in data

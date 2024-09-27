@@ -3,40 +3,55 @@
 from flask import Blueprint, request, jsonify, current_app, send_file, abort, Response
 from werkzeug.utils import secure_filename
 from app.db.mongodb import get_db
-from app.services.video_service import VideoService
-from app.services.reconstruction_service import ReconstructionService
-from app.models.point_cloud import PointCloud
-from app.models.threed_model import ThreeDModel
-from app.services.preprocess_service import PreprocessService
 from bson import ObjectId, errors as bson_errors
 import os
-import numpy as np
-import pyvista as pv
 import traceback
-from PIL import Image
+from typing import Dict, Any
+
+from app.services.video_service import VideoService
+from app.services.reconstruction_service import ReconstructionService
+from app.services.preprocess_service import PreprocessService
 from app.services.recon_proc_visualization_service import ReconProcVisualizationService
-
-
+from app.models.point_cloud import PointCloud
+from app.models.threed_model import ThreeDModel
 
 api_bp = Blueprint('api', __name__)
+
+# Dependency Injection
 video_service = VideoService()
 preprocess_service = PreprocessService()
-# reconstruction_service = ReconstructionService()
+reconstruction_service = ReconstructionService()
+visualization_service = ReconProcVisualizationService()
 
+# Helper functions
+def allowed_file(filename):
+    """Check if the file extension is allowed."""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
-# @api_bp.route('/', methods=['GET'])
-# def home():
-#     return jsonify({"message": "Welcome to the DROMO API"}), 200
+def create_error_response(message: str, status_code: int) -> tuple:
+    """Create a standardized error response."""
+    return jsonify({"error": message}), status_code
 
-# @api_bp.route('/api/upload', methods=['POST'])
+def create_success_response(data: Dict[str, Any], message: str = "Success") -> tuple:
+    """Create a standardized success response."""
+    response = {"message": message, "data": data}
+    return jsonify(response), 200
+
+@api_bp.errorhandler(Exception)
+def handle_exception(e):
+    """Global exception handler for the API."""
+    current_app.logger.error(f"An error occurred: {str(e)}", exc_info=True)
+    return jsonify({"error": "An internal error occurred"}), 500
+
+##################################################
+# Upload visual data API
+##################################################
+
 @api_bp.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_visual_data():
     """
     Handle the upload of visual data.
-
-    Expects:
-        - A 'file' in the request files
-        - A 'title' in the form data (optional)
 
     Returns:
         JSON response with upload status and video ID.
@@ -66,19 +81,6 @@ def upload_visual_data():
         }), 200
     else:
         return jsonify({"error": "File type not allowed"}), 400
-
-def allowed_file(filename):
-    """
-    Check if the file extension is allowed.
-
-    Args:
-        filename (str): The name of the file to check.
-
-    Returns:
-        bool: True if the file extension is allowed, False otherwise.
-    """
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 
 @api_bp.route('/api/videos/<video_id>', methods=['GET'])
@@ -181,23 +183,21 @@ def upload_point_cloud():
         return jsonify({"error": str(e)}), 400
 
 @api_bp.route('/api/point_clouds/<point_cloud_id>', methods=['GET'])
-def get_point_cloud(point_cloud_id):
+def get_point_cloud(point_cloud_id: str):
     """Retrieve a specific point cloud."""
     try:
-        object_id = ObjectId(point_cloud_id)
+        ObjectId(point_cloud_id)  # Validate the ID format
     except bson_errors.InvalidId:
         return jsonify({'error': 'Invalid point cloud ID'}), 400
 
-    db = get_db()
-    pc_data = db.point_clouds.find_one({'_id': object_id})
-
-    if pc_data:
+    pc = PointCloud.get_by_id(point_cloud_id)
+    if pc:
         return jsonify({
-            'id': str(pc_data['_id']),
-            'name': pc_data['name'],
-            'num_points': len(pc_data['points']),
-            'has_colors': 'colors' in pc_data,
-            'timestamp': pc_data['timestamp'].isoformat()
+            'id': point_cloud_id,
+            'name': pc.name,
+            'num_points': len(pc.points),
+            'has_colors': pc.colors is not None,
+            'timestamp': pc.timestamp.isoformat()
         }), 200
     else:
         return jsonify({'error': 'Point cloud not found'}), 404
@@ -205,8 +205,7 @@ def get_point_cloud(point_cloud_id):
 @api_bp.route('/api/point_clouds', methods=['GET'])
 def list_point_clouds():
     """List all point clouds."""
-    db = get_db()
-    point_clouds = db.point_clouds.find()
+    point_clouds = PointCloud.list_all()
     return jsonify([{
         'id': str(pc['_id']),
         'name': pc['name'],
@@ -269,7 +268,7 @@ def reconstruct(point_cloud_id):
         JSON response with reconstruction status and model ID.
     """
     try:
-        model_id = ReconstructionService.start_reconstruction(point_cloud_id)
+        model_id = reconstruction_service.start_reconstruction(point_cloud_id)
 
         return jsonify({
             "message": "Reconstruction completed successfully",
@@ -369,7 +368,6 @@ def download_texture(model_id):
         current_app.logger.error(f"Texture file not found for model: {model_id}")
         return jsonify({'error': '3D model or texture file not found'}), 404
 
-
 @api_bp.route('/api/models/<model_id>/material', methods=['GET'])
 def download_material(model_id):
     """Download the material (MTL) file of a specific 3D model."""
@@ -385,28 +383,16 @@ def download_material(model_id):
 @api_bp.route('/api/models/<model_id>/obj', methods=['GET'])
 def get_model_obj(model_id):
     """Serve the OBJ file for a specific 3D model."""
-    model = ThreeDModel.get_by_id(model_id)
-    if model and model.obj_file:
-        file_path = os.path.join(model.folder_path, model.obj_file)
-        if os.path.exists(file_path):
-            return send_file(file_path)
-    abort(404)
-
-
-
-
-# @api_bp.route('/api/models/<model_id>/<filename>', methods=['GET'])
-# def get_model_file(model_id, filename):
-#     """Serve model files (OBJ, MTL, or texture)."""
-#     model = ThreeDModel.get_by_id(model_id)
-#     if not model:
-#         abort(404, description="Model not found")
-
-#     file_path = os.path.join(model.folder_path, filename)
-#     if not os.path.exists(file_path):
-#         abort(404, description=f"File {filename} not found for model {model_id}")
-
-#     return send_file(file_path)
+    try:
+        model = ThreeDModel.get_by_id(model_id)
+        if model and model.obj_file:
+            file_path = os.path.join(model.folder_path, model.obj_file)
+            if os.path.exists(file_path):
+                return send_file(file_path)
+        return jsonify({"error": "3D model or OBJ file not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"An error occurred while serving OBJ file: {str(e)}")
+        return jsonify({"error": "An internal error occurred"}), 500
 
 ########################################################################
 # 3D Model with plotly API
@@ -415,23 +401,26 @@ def get_model_obj(model_id):
 @api_bp.route('/api/reconstruction/point_cloud/<model_id>')
 def get_point_cloud_data(model_id):
     current_app.logger.info(f"Getting point cloud data for model: {model_id}")
-    data = ReconProcVisualizationService.get_point_cloud_data(model_id)
+    data = visualization_service.get_point_cloud_data(model_id)
     if data is None:
         return jsonify({"error": "Model or point cloud not found"}), 404
     return jsonify([data])
 
 @api_bp.route('/api/reconstruction/initial_mesh/<model_id>')
 def get_initial_mesh_data(model_id):
-    current_app.logger.info(f"Getting initial mesh data for model: {model_id}")
-    data = ReconProcVisualizationService.get_mesh_data(model_id, mesh_type='initial')
-    if data is None:
-        return jsonify({"error": "Model not found"}), 404
-    return jsonify(data)
+    try:
+        current_app.logger.info(f"Getting initial mesh data for model: {model_id}")
+        data = visualization_service.get_mesh_data(model_id, mesh_type='initial')
+        if data is None:
+            return jsonify({"error": "Model not found"}), 404
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @api_bp.route('/api/reconstruction/refined_mesh/<model_id>')
 def get_refined_mesh_data(model_id):
     current_app.logger.info(f"Getting refined mesh data for model: {model_id}")
-    data = ReconProcVisualizationService.get_mesh_data(model_id, mesh_type='refined')
+    data = visualization_service.get_mesh_data(model_id, mesh_type='refined')
     if data is None:
         return jsonify({"error": "Model not found"}), 404
     return jsonify(data)
@@ -439,7 +428,7 @@ def get_refined_mesh_data(model_id):
 @api_bp.route('/api/reconstruction/textured_mesh/<model_id>')
 def get_textured_mesh_data(model_id):
     current_app.logger.info(f"Getting textured mesh data for model: {model_id}")
-    data = ReconProcVisualizationService.get_textured_mesh_data(model_id)
+    data = visualization_service.get_textured_mesh_data(model_id)
     if data is None:
         return jsonify({"error": "Model not found"}), 404
     return jsonify(data)
