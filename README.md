@@ -23,14 +23,19 @@ MONGODB_URI=mongodb://localhost:27017/dromo
 SECRET_KEY=your-secret-key-here
 UPLOAD_FOLDER=/app/uploads
 ```
-3. Open MongoDB and Docker
-4. ```docker compose build```
-5. ```docker compose up```
-6. `localhost:5000`
+3. Open Docker - [(Download separately)](https://www.docker.com/)
+4. Run: ```docker compose up --build```
+5. GoTo: `localhost:5000`
 
 ### Test
 
 1. run: ```docker compose run test pytest```
+
+
+</br>
+</br>
+</br>
+</br>
 
 # DEV:
 
@@ -56,22 +61,26 @@ UPLOAD_FOLDER=/app/uploads
 | `/api/models/<id>/download` | GET | `id`: Str | OBJ file | 200, 404 |
 | `/api/models/<id>/texture` | GET | `id`: Str | Texture file | 200, 404 |
 | `/api/models/<id>/material` | GET | `id`: Str | MTL file | 200, 404 |
-| `/api/models/<id>/obj` | GET | `id`: Str | OBJ file | 200, 404 |
+| `/api/models/<id>/obj` | GET | `id`: Str | OBJ file | 200, 404, 500 |
+| `/api/reconstruction/point_cloud/<id>` | GET | `id`: Str | Point cloud data | 200, 404 |
+| `/api/reconstruction/initial_mesh/<id>` | GET | `id`: Str | Initial mesh data | 200, 400, 404 |
+| `/api/reconstruction/refined_mesh/<id>` | GET | `id`: Str | Refined mesh data | 200, 404 |
+| `/api/reconstruction/textured_mesh/<id>` | GET | `id`: Str | Textured mesh data | 200, 404 |
 
 ### Structure
 ```
+Dromo_Structure/
 ├── app
 │   ├── __init__.py
+│   ├── config.py
 │   ├── api
 │   │   ├── __init__.py
 │   │   └── routes.py
-│   ├── config.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   └── mongodb.py
 │   ├── models
 │   │   ├── __init__.py
-│   │   ├── ply.py
 │   │   ├── point_cloud.py
 │   │   ├── threed_model.py
 │   │   └── video.py
@@ -86,12 +95,25 @@ UPLOAD_FOLDER=/app/uploads
 │   │   └── texture_mapper.py
 │   ├── services
 │   │   ├── __init__.py
-│   │   ├── ply_service.py
 │   │   ├── preprocess_service.py
+│   │   ├── recon_proc_visualization_service.py
 │   │   ├── reconstruction_service.py
 │   │   └── video_service.py
 │   └── static
-│       └── index.html
+│       ├── index.html
+│       ├── css
+│       │   ├── reconstruction-process.css
+│       │   └── styles.css
+│       └── js
+│           ├── ApiService.js
+│           ├── DromoUtils.js
+│           ├── ModelManager.js
+│           ├── ModelViewer.js
+│           ├── NotificationSystem.js
+│           ├── PointCloudManager.js
+│           ├── ReconstructionProcess.js
+│           ├── VideoManager.js
+│           └── main.js
 ├── Dockerfile
 ├── README.md
 ├── docker-compose.yml
@@ -105,10 +127,13 @@ UPLOAD_FOLDER=/app/uploads
 │   ├── test_api.py
 │   ├── test_point_cloud.py
 │   ├── test_preprocess.py
+│   ├── test_recon_proc_visualization_service.py
 │   ├── test_reconstruction_api.py
-│   └── test_threed_model_api.py
+│   ├── test_reconstruction_service.py
+│   ├── test_threed_model_api.py
+│   └── test_visualization_api.py
 └── uploads
-    └── Mouse-floor.ply
+    └── test_ply.ply
 ```
 
 ### 🚀 Build smarter, not harder! → Upgrade docker speed
