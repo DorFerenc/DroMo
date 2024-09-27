@@ -6,6 +6,7 @@ from app.models.threed_model import ThreeDModel
 from bson import ObjectId
 import json
 from unittest.mock import patch, MagicMock
+import os
 
 @pytest.fixture
 def app():
@@ -32,7 +33,12 @@ def mongo(app):
 
 def test_list_models_success(client, mongo):
     """
-    Scenario: Successfully list all 3D models
+    Test listing all 3D models.
+
+    Scenario:
+    - Two models are added to the database
+    - A GET request is made to '/api/models'
+    - The response should contain both models
     """
     model1 = ThreeDModel("Model 1", "folder1", "pc_id_1", "obj_1", "mtl_1", "texture_1")
     model2 = ThreeDModel("Model 2", "folder2", "pc_id_2", "obj_2", "mtl_2", "texture_2")
@@ -49,7 +55,12 @@ def test_list_models_success(client, mongo):
 
 def test_get_model_success(client, mongo):
     """
-    Scenario: Successfully get a specific 3D model
+    Test retrieving a specific 3D model.
+
+    Scenario:
+    - A model is added to the database
+    - A GET request is made to '/api/models/{model_id}'
+    - The response should contain the correct model details
     """
     model = ThreeDModel("Test Model", "test_folder", "pc_id", "obj_file", "mtl_file", "texture_file")
     model_id = model.save()
@@ -64,7 +75,11 @@ def test_get_model_success(client, mongo):
 
 def test_get_model_not_found(client, mongo):
     """
-    Scenario: Attempt to get a non-existent 3D model
+    Test attempting to retrieve a non-existent 3D model.
+
+    Scenario:
+    - A GET request is made with an invalid model ID
+    - The response should be a 404 error
     """
     invalid_id = str(ObjectId())
     response = client.get(f'/api/models/{invalid_id}')
@@ -76,7 +91,12 @@ def test_get_model_not_found(client, mongo):
 
 def test_delete_model_success(client, mongo):
     """
-    Scenario: Successfully delete a 3D model
+    Test deleting a 3D model.
+
+    Scenario:
+    - A model is added to the database
+    - A DELETE request is made to '/api/models/{model_id}'
+    - The model should be successfully deleted
     """
     model = ThreeDModel("Test Model", "test_folder", "pc_id", "obj_file", "mtl_file", "texture_file")
     model_id = model.save()
@@ -92,7 +112,11 @@ def test_delete_model_success(client, mongo):
 
 def test_delete_model_not_found(client, mongo):
     """
-    Scenario: Attempt to delete a non-existent 3D model
+    Test attempting to delete a non-existent 3D model.
+
+    Scenario:
+    - A DELETE request is made with an invalid model ID
+    - The response should be a 404 error
     """
     invalid_id = str(ObjectId())
     response = client.delete(f'/api/models/{invalid_id}')
@@ -102,32 +126,36 @@ def test_delete_model_not_found(client, mongo):
     assert "error" in data
     assert "3D model not found" in data['error']
 
-# def test_download_model_success(client, mongo):
-#     """
-#     Scenario: Successfully download a 3D model's OBJ file
-#     """
-#     # Create a temporary directory and file for testing
-#     with tempfile.TemporaryDirectory() as tmpdirname:
-#         obj_filename = "test_model.obj"
-#         with open(os.path.join(tmpdirname, obj_filename), 'w') as f:
-#             f.write("Test OBJ content")
+def test_download_model_success(client, mongo):
+    """
+    Test downloading a 3D model's OBJ file.
 
-#         model = ThreeDModel("Test Model", tmpdirname, "pc_id", obj_filename, "mtl_file", "texture_file")
-#         model_id = model.save()
+    Scenario:
+    - A model with an OBJ file is added to the database
+    - A GET request is made to '/api/models/{model_id}/download'
+    - The OBJ file should be successfully downloaded
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        obj_filename = "test_model.obj"
+        with open(os.path.join(tmpdirname, obj_filename), 'w') as f:
+            f.write("Test OBJ content")
 
-#         response = client.get(f'/api/models/{model_id}/download')
+        model = ThreeDModel("Test Model", tmpdirname, "pc_id", obj_filename, "mtl_file", "texture_file")
+        model_id = model.save()
 
-#         print(f"Response status: {response.status_code}")
-#         print(f"Response data: {response.data}")
+        response = client.get(f'/api/models/{model_id}/download')
 
-#         assert response.status_code == 200
-#         assert response.headers['Content-Disposition'] == f'attachment; filename={obj_filename}'
-#         assert response.data == b"Test OBJ content"
-
+        assert response.status_code == 200
+        assert response.headers['Content-Disposition'] == f'attachment; filename={obj_filename}'
+        assert response.data == b"Test OBJ content"
 
 def test_download_model_not_found(client, mongo):
     """
-    Scenario: Attempt to download a non-existent 3D model's OBJ file
+    Test attempting to download a non-existent 3D model's OBJ file.
+
+    Scenario:
+    - A GET request is made with an invalid model ID
+    - The response should be a 404 error
     """
     invalid_id = str(ObjectId())
     response = client.get(f'/api/models/{invalid_id}/download')
@@ -137,4 +165,109 @@ def test_download_model_not_found(client, mongo):
     assert "error" in data
     assert "3D model or OBJ file not found" in data['error']
 
-# You can add similar tests for downloading texture and material files
+def test_get_model_obj_success(client, mongo):
+    """
+    Test serving a 3D model's OBJ file.
+
+    Scenario:
+    - A model with an OBJ file is added to the database
+    - A GET request is made to '/api/models/{model_id}/obj'
+    - The OBJ file should be successfully served
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        obj_filename = "test_model.obj"
+        with open(os.path.join(tmpdirname, obj_filename), 'w') as f:
+            f.write("Test OBJ content")
+
+        model = ThreeDModel("Test Model", tmpdirname, "pc_id", obj_filename, "mtl_file", "texture_file")
+        model_id = model.save()
+
+        response = client.get(f'/api/models/{model_id}/obj')
+
+        assert response.status_code == 200
+        assert response.data == b"Test OBJ content"
+
+def test_download_texture_success(client, mongo):
+    """
+    Test downloading a 3D model's texture file.
+
+    Scenario:
+    - A model with a texture file is added to the database
+    - A GET request is made to '/api/models/{model_id}/texture'
+    - The texture file should be successfully downloaded
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        texture_filename = "test_texture.png"
+        texture_path = os.path.join(tmpdirname, texture_filename)
+        with open(texture_path, 'wb') as f:
+            f.write(b"Test texture content")
+
+        model = ThreeDModel("Test Model", tmpdirname, "pc_id", "obj_file", "mtl_file", texture_path)
+        model_id = model.save()
+
+        response = client.get(f'/api/models/{model_id}/texture')
+
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+
+        # Check if the file exists before the test
+        assert os.path.exists(texture_path), f"Texture file does not exist at {texture_path}"
+
+        assert response.status_code == 200, f"Unexpected status code: {response.status_code}"
+        assert response.headers['Content-Disposition'] == f'attachment; filename={texture_filename}'
+        assert response.data == b"Test texture content"
+
+def test_download_material_success(client, mongo):
+    """
+    Test downloading a 3D model's material file.
+
+    Scenario:
+    - A model with a material file is added to the database
+    - A GET request is made to '/api/models/{model_id}/material'
+    - The material file should be successfully downloaded
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        mtl_filename = "test_material.mtl"
+        mtl_path = os.path.join(tmpdirname, mtl_filename)
+        with open(mtl_path, 'w') as f:
+            f.write("Test MTL content")
+
+        model = ThreeDModel("Test Model", tmpdirname, "pc_id", "obj_file", mtl_path, "texture_file")
+        model_id = model.save()
+
+        response = client.get(f'/api/models/{model_id}/material')
+
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+
+        # Check if the file exists before the test
+        assert os.path.exists(mtl_path), f"Material file does not exist at {mtl_path}"
+
+        assert response.status_code == 200, f"Unexpected status code: {response.status_code}"
+        assert response.headers['Content-Disposition'] == f'attachment; filename={mtl_filename}'
+        assert response.data == b"Test MTL content"
+
+def test_get_model_obj_not_found(client, mongo):
+    """
+    Test attempting to serve a non-existent 3D model's OBJ file.
+
+    Scenario:
+    - A GET request is made with an invalid model ID
+    - The response should be either a 404 error or a 500 error (depending on how the application handles the Not Found exception)
+    """
+    invalid_id = str(ObjectId())
+    response = client.get(f'/api/models/{invalid_id}/obj')
+
+    print(f"Response status: {response.status_code}")
+    print(f"Response data: {response.data}")
+
+    assert response.status_code in [404, 500], f"Unexpected status code: {response.status_code}"
+
+    data = json.loads(response.data)
+    if response.status_code == 404:
+        assert "error" in data
+        assert "3D model or OBJ file not found" in data['error']
+    else:  # 500 status code
+        assert "error" in data
+        assert "An internal error occurred" in data['error']
+

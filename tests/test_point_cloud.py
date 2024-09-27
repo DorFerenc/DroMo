@@ -186,3 +186,17 @@ def test_invalid_point_cloud_id(client):
     delete_response = client.delete(f'/api/point_clouds/{invalid_id}')
     assert delete_response.status_code == 400
     assert json.loads(delete_response.data)['error'] == 'Invalid point cloud ID'
+
+def test_upload_large_point_cloud(client):
+    """
+    Scenario: Upload a large point cloud
+    """
+    large_pc_string = "x,y,z,r,g,b\n" + "\n".join([f"{i},{i},{i},255,0,0" for i in range(100000)])
+    data = {
+        'name': 'Large Point Cloud',
+        'file': (BytesIO(large_pc_string.encode()), 'large_cloud.txt')
+    }
+    response = client.post('/api/point_clouds', data=data, content_type='multipart/form-data')
+    assert response.status_code == 200
+    response_data = json.loads(response.data.decode('utf-8'))
+    assert "point_cloud_id" in response_data
