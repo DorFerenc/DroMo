@@ -186,20 +186,18 @@ def upload_point_cloud():
 def get_point_cloud(point_cloud_id: str):
     """Retrieve a specific point cloud."""
     try:
-        object_id = ObjectId(point_cloud_id)
+        ObjectId(point_cloud_id)  # Validate the ID format
     except bson_errors.InvalidId:
         return jsonify({'error': 'Invalid point cloud ID'}), 400
 
-    db = get_db()
-    pc_data = db.point_clouds.find_one({'_id': object_id})
-
-    if pc_data:
+    pc = PointCloud.get_by_id(point_cloud_id)
+    if pc:
         return jsonify({
-            'id': str(pc_data['_id']),
-            'name': pc_data['name'],
-            'num_points': len(pc_data['points']),
-            'has_colors': 'colors' in pc_data,
-            'timestamp': pc_data['timestamp'].isoformat()
+            'id': point_cloud_id,
+            'name': pc.name,
+            'num_points': len(pc.points),
+            'has_colors': pc.colors is not None,
+            'timestamp': pc.timestamp.isoformat()
         }), 200
     else:
         return jsonify({'error': 'Point cloud not found'}), 404
