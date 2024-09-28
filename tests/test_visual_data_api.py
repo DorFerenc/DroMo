@@ -55,28 +55,28 @@ def test_home_route(client):
 def test_upload_visual_data_success(client, mongo):
     """
     Scenario: Successfully upload visual data
-        Given I have a video file
+        Given I have a visual_data file
         When I upload the file with a title
         Then I should receive a success message
         And the file should be stored in the database
     """
     data = {
-        'title': 'Test Video',
-        'file': (BytesIO(b'fake video content'), 'test_video.ply')
+        'title': 'Test visual_data',
+        'file': (BytesIO(b'fake visual_data content'), 'test_visual_data.ply')
     }
     response = client.post('/api/upload', data=data, content_type='multipart/form-data')
     assert response.status_code == 200
 
     response_data = json.loads(response.data.decode('utf-8'))
     assert "message" in response_data
-    assert "video_id" in response_data
+    assert "visual_data_id" in response_data
     assert response_data["message"] == "Upload success"
 
-    # Check if the video was stored in MongoDB
-    video = mongo.videos.find_one({'_id': ObjectId(response_data['video_id'])})
-    assert video is not None
-    assert video['title'] == 'Test Video'
-    assert 'file_path' in video
+    # Check if the visual_data was stored in MongoDB
+    visual_data = mongo.visual_datas.find_one({'_id': ObjectId(response_data['visual_data_id'])})
+    assert visual_data is not None
+    assert visual_data['title'] == 'Test visual_data'
+    assert 'file_path' in visual_data
 
 def test_upload_visual_data_no_file(client):
     """
@@ -85,7 +85,7 @@ def test_upload_visual_data_no_file(client):
         When I try to upload
         Then I should receive an error message
     """
-    data = {'title': 'Test Video'}
+    data = {'title': 'Test visual_data'}
     response = client.post('/api/upload', data=data, content_type='multipart/form-data')
     assert response.status_code == 400
     assert b"No file part" in response.data
@@ -98,8 +98,8 @@ def test_upload_visual_data_no_filename(client):
         Then I should receive an error message
     """
     data = {
-        'title': 'Test Video',
-        'file': (BytesIO(b'fake video content'), '')
+        'title': 'Test visual_data',
+        'file': (BytesIO(b'fake visual_data content'), '')
     }
     response = client.post('/api/upload', data=data, content_type='multipart/form-data')
     assert response.status_code == 400
@@ -131,129 +131,129 @@ def test_mongodb_connection(app):
         db = get_db()
         assert db.command('ping')['ok'] == 1
 
-def test_video_retrieval(client, mongo):
+def test_visual_data_retrieval(client, mongo):
     """
-    Scenario: Retrieve uploaded video information
-        Given I have uploaded a video
-        When I request information about the video
-        Then I should receive the correct video details
+    Scenario: Retrieve uploaded visual_data information
+        Given I have uploaded a visual_data
+        When I request information about the visual_data
+        Then I should receive the correct visual_data details
     """
-    # First, upload a video
+    # First, upload a visual_data
     upload_data = {
-        'title': 'Retrieval Test Video',
-        'file': (BytesIO(b'fake video content for retrieval'), 'retrieval_test.ply')
+        'title': 'Retrieval Test visual_data',
+        'file': (BytesIO(b'fake visual_data content for retrieval'), 'retrieval_test.ply')
     }
     upload_response = client.post('/api/upload', data=upload_data, content_type='multipart/form-data')
     upload_result = json.loads(upload_response.data.decode('utf-8'))
-    video_id = upload_result['video_id']
+    visual_data_id = upload_result['visual_data_id']
 
-    # Now, retrieve the video information
-    response = client.get(f'/api/videos/{video_id}')
+    # Now, retrieve the visual_data information
+    response = client.get(f'/api/visual_datas/{visual_data_id}')
     assert response.status_code == 200
 
-    video_data = json.loads(response.data.decode('utf-8'))
-    assert video_data['title'] == 'Retrieval Test Video'
-    assert 'file_path' in video_data
-    assert 'timestamp' in video_data
+    visual_data_data = json.loads(response.data.decode('utf-8'))
+    assert visual_data_data['title'] == 'Retrieval Test visual_data'
+    assert 'file_path' in visual_data_data
+    assert 'timestamp' in visual_data_data
 
-def test_list_videos(client, mongo):
+def test_list_visual_datas(client, mongo):
     """
-    Scenario: List all videos
-        Given there are videos in the database
-        When I request the list of videos
-        Then I should receive a list of all videos
+    Scenario: List all visual_datas
+        Given there are visual_datas in the database
+        When I request the list of visual_datas
+        Then I should receive a list of all visual_datas
     """
-    # Add some test videos to the database
-    mongo.videos.insert_many([
-        {'title': 'Video 1', 'file_path': '/path/to/video1.mp4', 'timestamp': '2024-09-14T10:00:00'},
-        {'title': 'Video 2', 'file_path': '/path/to/video2.mp4', 'timestamp': '2024-09-14T11:00:00'}
+    # Add some test visual_datas to the database
+    mongo.visual_datas.insert_many([
+        {'title': 'visual_data 1', 'file_path': '/path/to/visual_data1.mp4', 'timestamp': '2024-09-14T10:00:00'},
+        {'title': 'visual_data 2', 'file_path': '/path/to/visual_data2.mp4', 'timestamp': '2024-09-14T11:00:00'}
     ])
 
-    response = client.get('/api/videos')
+    response = client.get('/api/visual_datas')
     assert response.status_code == 200
 
-    videos = json.loads(response.data.decode('utf-8'))
-    assert len(videos) == 2
-    assert videos[0]['title'] == 'Video 1'
-    assert videos[1]['title'] == 'Video 2'
-    assert 'timestamp' in videos[0]
-    assert 'timestamp' in videos[1]
+    visual_datas = json.loads(response.data.decode('utf-8'))
+    assert len(visual_datas) == 2
+    assert visual_datas[0]['title'] == 'visual_data 1'
+    assert visual_datas[1]['title'] == 'visual_data 2'
+    assert 'timestamp' in visual_datas[0]
+    assert 'timestamp' in visual_datas[1]
 
-def test_get_video_details(client, mongo):
+def test_get_visual_data_details(client, mongo):
     """
-    Scenario: Get video details
-        Given there is a video in the database
-        When I request the details of that video
-        Then I should receive the correct video information
+    Scenario: Get visual_data details
+        Given there is a visual_data in the database
+        When I request the details of that visual_data
+        Then I should receive the correct visual_data information
     """
-    video = mongo.videos.insert_one({
-        'title': 'Test Video',
-        'file_path': '/path/to/test_video.mp4',
+    visual_data = mongo.visual_datas.insert_one({
+        'title': 'Test visual_data',
+        'file_path': '/path/to/test_visual_data.mp4',
         'timestamp': '2024-09-14T12:00:00'
     })
 
-    response = client.get(f'/api/videos/{str(video.inserted_id)}')
+    response = client.get(f'/api/visual_datas/{str(visual_data.inserted_id)}')
     assert response.status_code == 200
 
-    video_data = json.loads(response.data.decode('utf-8'))
-    assert video_data['title'] == 'Test Video'
-    assert video_data['file_path'] == '/path/to/test_video.mp4'
-    assert video_data['timestamp'] == '2024-09-14T12:00:00'
+    visual_data_data = json.loads(response.data.decode('utf-8'))
+    assert visual_data_data['title'] == 'Test visual_data'
+    assert visual_data_data['file_path'] == '/path/to/test_visual_data.mp4'
+    assert visual_data_data['timestamp'] == '2024-09-14T12:00:00'
 
-def test_get_nonexistent_video(client):
+def test_get_nonexistent_visual_data(client):
     """
-    Scenario: Get details of a non-existent video
-        Given there is no video with a specific ID in the database
-        When I request the details of that video
+    Scenario: Get details of a non-existent visual_data
+        Given there is no visual_data with a specific ID in the database
+        When I request the details of that visual_data
         Then I should receive a 404 error
     """
     nonexistent_id = str(ObjectId())
-    response = client.get(f'/api/videos/{nonexistent_id}')
+    response = client.get(f'/api/visual_datas/{nonexistent_id}')
     assert response.status_code == 404
 
-def test_delete_video(client, mongo):
+def test_delete_visual_data(client, mongo):
     """
-    Scenario: Delete a video
-        Given there is a video in the database
-        When I request to delete that video
-        Then the video should be removed from the database
+    Scenario: Delete a visual_data
+        Given there is a visual_data in the database
+        When I request to delete that visual_data
+        Then the visual_data should be removed from the database
     """
-    video = mongo.videos.insert_one({
-        'title': 'Video to Delete',
-        'file_path': '/path/to/delete_video.mp4',
+    visual_data = mongo.visual_datas.insert_one({
+        'title': 'visual_data to Delete',
+        'file_path': '/path/to/delete_visual_data.mp4',
         'timestamp': '2024-09-14T13:00:00'
     })
 
-    response = client.delete(f'/api/videos/{str(video.inserted_id)}')
+    response = client.delete(f'/api/visual_datas/{str(visual_data.inserted_id)}')
     assert response.status_code == 200
 
-    # Check that the video was actually deleted
-    assert mongo.videos.find_one({'_id': video.inserted_id}) is None
+    # Check that the visual_data was actually deleted
+    assert mongo.visual_datas.find_one({'_id': visual_data.inserted_id}) is None
 
 
-def test_delete_nonexistent_video(client):
+def test_delete_nonexistent_visual_data(client):
     """
-    Scenario: Delete a non-existent video
-        Given there is no video with a specific ID in the database
-        When I request to delete that video
+    Scenario: Delete a non-existent visual_data
+        Given there is no visual_data with a specific ID in the database
+        When I request to delete that visual_data
         Then I should receive a 404 error
     """
     nonexistent_id = str(ObjectId())
-    response = client.delete(f'/api/videos/{nonexistent_id}')
+    response = client.delete(f'/api/visual_datas/{nonexistent_id}')
     assert response.status_code == 404
 
-def test_invalid_video_id(client):
+def test_invalid_visual_data_id(client):
     """
-    Scenario: Use an invalid video ID
-        Given an invalid video ID is provided
-        When I request to get or delete a video
+    Scenario: Use an invalid visual_data ID
+        Given an invalid visual_data ID is provided
+        When I request to get or delete a visual_data
         Then I should receive a 404 error
     """
     invalid_id = 'invalid_id'
-    get_response = client.get(f'/api/videos/{invalid_id}')
+    get_response = client.get(f'/api/visual_datas/{invalid_id}')
     assert get_response.status_code == 404
-    assert json.loads(get_response.data)['error'] == 'Video not found or invalid ID'
+    assert json.loads(get_response.data)['error'] == 'visual_data not found or invalid ID'
 
-    delete_response = client.delete(f'/api/videos/{invalid_id}')
+    delete_response = client.delete(f'/api/visual_datas/{invalid_id}')
     assert delete_response.status_code == 404
-    assert json.loads(delete_response.data)['error'] == 'Video not found or invalid ID'
+    assert json.loads(delete_response.data)['error'] == 'visual_data not found or invalid ID'

@@ -5,7 +5,7 @@ from app import create_app
 from app.db.mongodb import get_db
 from app.models.point_cloud import PointCloud
 from app.services.preprocess_service import PreprocessService
-from app.services.video_service import VideoService
+from app.services.visual_data_service import VisualDataService
 from bson import ObjectId
 import json
 from unittest.mock import patch
@@ -53,8 +53,8 @@ def test_process_ply_success(client, mongo, test_ply_file):
         'title': 'Test PLY'
     })
 
-    # Mock the VideoService.get_video method
-    with patch.object(VideoService, 'get_video', return_value={'file_path': test_ply_file, 'title': 'Test PLY'}):
+    # Mock the visual_dataService.get_visual_data method
+    with patch.object(VisualDataService, 'get_visual_data', return_value={'file_path': test_ply_file, 'title': 'Test PLY'}):
         result = PreprocessService.process_ply(ply_id)
 
     assert result is not None
@@ -71,8 +71,8 @@ def test_process_ply_not_found(client, mongo):
     """
     invalid_id = str(ObjectId())
 
-    # Mock the VideoService.get_video method to return None
-    with patch.object(VideoService, 'get_video', return_value=None):
+    # Mock the visual_dataService.get_visual_data method to return None
+    with patch.object(VisualDataService, 'get_visual_data', return_value=None):
         result = PreprocessService.process_ply(invalid_id)
 
     assert result is None
@@ -94,8 +94,8 @@ def test_get_progress_success(client, mongo):
         'point_cloud_id': point_cloud_id
     }
 
-    # Mock the VideoService.get_video method
-    with patch.object(VideoService, 'get_video', return_value=ply_file):
+    # Mock the visual_dataService.get_visual_data method
+    with patch.object(VisualDataService, 'get_visual_data', return_value=ply_file):
         result = PreprocessService.get_progress(ply_id)
 
     assert result is not None
@@ -112,8 +112,8 @@ def test_get_progress_not_found(client, mongo):
     """
     invalid_id = str(ObjectId())
 
-    # Mock the VideoService.get_video method to return None
-    with patch.object(VideoService, 'get_video', return_value=None):
+    # Mock the visual_dataService.get_visual_data method to return None
+    with patch.object(VisualDataService, 'get_visual_data', return_value=None):
         result = PreprocessService.get_progress(invalid_id)
 
     assert result is None
@@ -133,8 +133,8 @@ def test_get_progress_not_processed(client, mongo):
         'processed': False
     }
 
-    # Mock the VideoService.get_video method
-    with patch.object(VideoService, 'get_video', return_value=ply_file):
+    # Mock the visual_dataService.get_visual_data method
+    with patch.object(VisualDataService, 'get_visual_data', return_value=ply_file):
         result = PreprocessService.get_progress(ply_id)
 
     assert result is not None

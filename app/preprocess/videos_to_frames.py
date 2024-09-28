@@ -1,4 +1,4 @@
-# app/preprocess/videos_to_frames.py
+# app/preprocess/visual_datas_to_frames.py
 import cv2
 import numpy as np
 import os
@@ -31,11 +31,11 @@ class FrameExtractor:
                     return True  # Object detected
         return False  # No object detected
 
-    def extract_relevant_frames(self, video_path, output_dir, interval=20):
+    def extract_relevant_frames(self, visual_data_path, output_dir, interval=20):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        cap = cv2.VideoCapture(video_path)
+        cap = cv2.visual_dataCapture(visual_data_path)
         frame_id = 0
         frames_count = 0
         last_detected_frame = -interval

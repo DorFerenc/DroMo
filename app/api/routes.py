@@ -8,7 +8,7 @@ import os
 import traceback
 from typing import Dict, Any
 
-from app.services.video_service import VideoService
+from app.services.visual_data_service import VisualDataService
 from app.services.reconstruction_service import ReconstructionService
 from app.services.preprocess_service import PreprocessService
 from app.services.recon_proc_visualization_service import ReconProcVisualizationService
@@ -18,7 +18,7 @@ from app.models.threed_model import ThreeDModel
 api_bp = Blueprint('api', __name__)
 
 # Dependency Injection
-video_service = VideoService()
+visual_data_service = VisualDataService()
 preprocess_service = PreprocessService()
 reconstruction_service = ReconstructionService()
 visualization_service = ReconProcVisualizationService()
@@ -54,7 +54,7 @@ def upload_visual_data():
     Handle the upload of visual data.
 
     Returns:
-        JSON response with upload status and video ID.
+        JSON response with upload status and visual_data ID.
     """
     if request.method == 'OPTIONS':
         return '', 200
@@ -73,78 +73,78 @@ def upload_visual_data():
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
 
-        video_id = video_service.create_video(title, file_path)
+        visual_data_id = visual_data_service.create_visual_data(title, file_path)
 
         return jsonify({
             "message": "Upload success",
-            "video_id": video_id
+            "visual_data_id": visual_data_id
         }), 200
     else:
         return jsonify({"error": "File type not allowed"}), 400
 
 
-@api_bp.route('/api/videos/<video_id>', methods=['GET'])
-def get_video(video_id):
-    """Retrieve information about a specific video."""
-    video = video_service.get_video(video_id)
-    if video:
+@api_bp.route('/api/visual_datas/<visual_data_id>', methods=['GET'])
+def get_visual_data(visual_data_id):
+    """Retrieve information about a specific visual_data."""
+    visual_data = visual_data_service.get_visual_data(visual_data_id)
+    if visual_data:
         return jsonify({
-            'id': str(video['_id']),
-            'title': video['title'],
-            'file_path': video['file_path'],
-            'timestamp': video['timestamp'] #.isoformat()
+            'id': str(visual_data['_id']),
+            'title': visual_data['title'],
+            'file_path': visual_data['file_path'],
+            'timestamp': visual_data['timestamp'] #.isoformat()
         }), 200
     else:
-        return jsonify({'error': 'Video not found or invalid ID'}), 404
+        return jsonify({'error': 'visual_data not found or invalid ID'}), 404
 
 
-@api_bp.route('/api/videos', methods=['GET'])
-def list_videos():
-    """List all videos."""
-    videos = video_service.get_all_videos()
+@api_bp.route('/api/visual_datas', methods=['GET'])
+def list_visual_datas():
+    """List all visual_datas."""
+    visual_datas = visual_data_service.get_all_visual_datas()
     return jsonify([{
-        'id': str(video['_id']),
-        'title': video['title'],
-        'timestamp': video['timestamp'] # .isoformat()
-    } for video in videos]), 200
+        'id': str(visual_data['_id']),
+        'title': visual_data['title'],
+        'timestamp': visual_data['timestamp'] # .isoformat()
+    } for visual_data in visual_datas]), 200
 
 
-@api_bp.route('/api/videos/<video_id>', methods=['DELETE'])
-def delete_video(video_id):
-    """Delete a specific video."""
-    result = video_service.delete_video(video_id)
+@api_bp.route('/api/visual_datas/<visual_data_id>', methods=['DELETE'])
+def delete_visual_data(visual_data_id):
+    """Delete a specific visual_data."""
+    result = visual_data_service.delete_visual_data(visual_data_id)
     if result:
-        return jsonify({'message': 'Video deleted successfully'}), 200
+        return jsonify({'message': 'visual_data deleted successfully'}), 200
     else:
-        return jsonify({'error': 'Video not found or invalid ID'}), 404
+        return jsonify({'error': 'visual_data not found or invalid ID'}), 404
 
 ########################################################################
 # Pre Process api
 ########################################################################
 
-@api_bp.route('/api/preprocess/<video_id>', methods=['POST'])
-def process_video(video_id):
+@api_bp.route('/api/preprocess/<visual_data_id>', methods=['POST'])
+def process_visual_data(visual_data_id):
     """
-        PreProcess the video
+        PreProcess the visual_data
         Args:
-            video_id (str): The id of the video to preprocess.
+            visual_data_id (str): The id of the visual_data to preprocess.
         Returns:
-            dict: The processed video data if found, None otherwise.
+            dict: The processed visual_data data if found, None otherwise.
         """
-    result = preprocess_service.process_ply(video_id)
+    result = preprocess_service.process_ply(visual_data_id)
     if result:
         return jsonify(result), 200
     else:
-        return jsonify({'error': 'Video not found or invalid ID'}), 404
+        return jsonify({'error': 'visual_data not found or invalid ID'}), 404
 
-@api_bp.route('/api/preprocess/progress/<video_id>', methods=['GET'])
-def progress_process_video(video_id):
-    """PreProcess the video"""
-    result = preprocess_service.get_progress(video_id)
+@api_bp.route('/api/preprocess/progress/<visual_data_id>', methods=['GET'])
+def progress_process_visual_data(visual_data_id):
+    """PreProcess the visual_data"""
+    result = preprocess_service.get_progress(visual_data_id)
     if result:
         return jsonify(result), 200
     else:
-        return jsonify({'error': 'Video not found or invalid ID'}), 404
+        return jsonify({'error': 'visual_data not found or invalid ID'}), 404
 
 ########################################################################
 # Point cloud api

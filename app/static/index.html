@@ -28,12 +28,12 @@
     <div class="container">
         <div class="tab-container">
             <div class="tab">
-                <button class="tablinks" data-tab="VideoTab"><i class="fas fa-video"></i> Videos</button>
+                <button class="tablinks" data-tab="visual_dataTab"><i class="fas fa-video"></i> Visual Data</button>
                 <button class="tablinks" data-tab="PointCloudTab"><i class="fas fa-dot-circle"></i> Point Clouds</button>
                 <button class="tablinks" data-tab="ModelTab"><i class="fas fa-cube"></i> 3D Models</button>
             </div>
 
-            <div id="VideoTab" class="tabcontent">
+            <div id="visual_dataTab" class="tabcontent">
                 <div class="section">
                     <h2>Upload PLY File</h2>
                     <div class="upload-area" id="plyUploadArea">
@@ -46,16 +46,16 @@
                     <button id="uploadPLYBtn" class="button">Upload</button>
                 </div>
                 <div class="section collapsible">
-                    <h2>Video List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <h2>Visual Data List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
                     <div class="content">
-                        <button id="refreshVideoListBtn" class="button"><i class="fas fa-sync"></i> Refresh Video List</button>
-                        <ul id="videoList"></ul>
+                        <button id="refreshvisual_dataListBtn" class="button"><i class="fas fa-sync"></i> Refresh Visual Data List</button>
+                        <ul id="visual_dataList"></ul>
                     </div>
                 </div>
                 <div class="section collapsible">
-                    <h2>Video Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <h2>Visual Data Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
                     <div class="content">
-                        <div id="videoDetails"></div>
+                        <div id="visual_dataDetails"></div>
                     </div>
                 </div>
             </div>
@@ -242,7 +242,7 @@
                     document.getElementById(type === 'ply' ? 'plyTitle' : 'pointCloudName').value = '';
                     document.getElementById(type === 'ply' ? 'plyFileName' : 'pointCloudFileName').textContent = '';
                     if (type === 'ply') {
-                        document.getElementById('refreshVideoListBtn').click();
+                        document.getElementById('refreshvisual_dataListBtn').click();
                     } else {
                         document.getElementById('refreshPointCloudListBtn').click();
                     }

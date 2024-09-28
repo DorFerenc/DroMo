@@ -1,6 +1,6 @@
 import ApiService from './ApiService.js';
 import NotificationSystem from './NotificationSystem.js';
-import VideoManager from './VideoManager.js';
+import VisualDataManager from './VisualDataManager.js';
 import PointCloudManager from './PointCloudManager.js';
 import ModelManager from './ModelManager.js';
 import ReconstructionProcess from './ReconstructionProcess.js';
@@ -10,19 +10,19 @@ const API_URL = 'http://localhost:5000/api';
 document.addEventListener('DOMContentLoaded', () => {
     const apiService = new ApiService(API_URL);
     const notificationSystem = new NotificationSystem();
-    const videoManager = new VideoManager(apiService, notificationSystem);
+    const VisualDataManager = new VisualDataManager(apiService, notificationSystem);
     const pointCloudManager = new PointCloudManager(apiService, notificationSystem);
     const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
     const modelManager = new ModelManager(apiService, notificationSystem, reconstructionProcess);
 
     // Make manager instances globally accessible
-    window.videoManager = videoManager;
+    window.VisualDataManager = VisualDataManager;
     window.pointCloudManager = pointCloudManager;
     window.modelManager = modelManager;
     window.reconstructionProcess = reconstructionProcess;
 
     // Initialize managers (if they have init methods)
-    if (typeof videoManager.init === 'function') videoManager.init();
+    if (typeof VisualDataManager.init === 'function') VisualDataManager.init();
     if (typeof pointCloudManager.init === 'function') pointCloudManager.init();
     if (typeof modelManager.init === 'function') modelManager.init();
 
