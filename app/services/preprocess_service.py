@@ -32,7 +32,47 @@ class PreprocessService:
         ply_processor = PLYProcessor(input_path)
 
         # Remove the background and extract the main object
-        ply_processor.preprocess()
+        # ply_processor.preprocess()
+        distance_threshold = 0.015
+        ransac_n = 3
+        num_iterations = 1000
+        cluster_eps = 0.02
+        min_points = 50
+
+        #load the pointCloud
+        pcd = ply_processor.load_point_cloud()
+        ply_processor.main_object = pcd
+
+        # Center the point cloud
+        center_pcd = ply_processor.center_point_cloud(pcd)
+
+        # Remove statistical outliers
+        filtered_pcd = ply_processor.remove_statistical_outliers(center_pcd)
+
+        # Voxel downsampling
+        filtered_pcd = ply_processor.voxel_downsample(filtered_pcd)
+
+        # Estimate normals
+        filtered_pcd = ply_processor.estimate_normals(filtered_pcd)
+
+        # Plane segmention
+        remaining_cloud = ply_processor.segment_plane(filtered_pcd, distance_threshold, ransac_n, num_iterations)
+
+        #clustering
+        main_object = ply_processor.cluster_points(remaining_cloud, cluster_eps, min_points)
+
+        # Remove statistical outliers, Center the point cloud, and Estimate normals again
+        main_object = ply_processor.remove_statistical_outliers(main_object, nn =30, std_multiplier=2.0)
+        main_object = ply_processor.center_point_cloud(main_object)
+        main_object = ply_processor.estimate_normals(main_object, max_nn=16)
+        ply_processor.main_object = main_object
+
+        # Object bottom completion
+        main_object = ply_processor.complete_bottom(main_object)
+
+        # Final object center
+        main_object = ply_processor.center_point_cloud(main_object)
+        ply_processor.main_object = main_object
 
         # Save the processed point cloud to the database and a CSV file
         point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])

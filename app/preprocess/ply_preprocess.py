@@ -102,6 +102,15 @@ class PLYProcessor:
         return pcd
     def segment_plane(self, pcd, distance_threshold, ransac_n, num_iterations):
         """Segment the largest plane from the point cloud."""
+        points = np.asarray(pcd.points)
+        z_min = np.min(points[:, 1])  # Min z value (ground level)
+        z_max = np.max(points[:, 1])  # Max z value (top of the object)
+        object_height = z_max - z_min
+        print(object_height)
+        min_height = 0.03
+        max_height = 0.2
+        distance_threshold = np.interp(object_height, [min_height, max_height], [0.006, 0.03])
+
         logging.info("Segmenting the largest plane from the point cloud.")
         plane_model, inliers = pcd.segment_plane(distance_threshold=distance_threshold,
                                                  ransac_n=ransac_n,
@@ -153,7 +162,7 @@ class PLYProcessor:
         logging.info("Convex hull computed successfully.")
         return hull
 
-    def sample_hull_surface(self, hull, num_samples=6000):
+    def sample_hull_surface(self, hull, num_samples=15000):
         """Sample points from the convex hull surface."""
         logging.info("Sampling points from the convex hull surface.")
         sample_points = hull.sample_points_uniformly(number_of_points=num_samples)
