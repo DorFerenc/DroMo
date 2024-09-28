@@ -59,16 +59,20 @@ class PointCloudProcessVisualization {
         this.nextButton.addEventListener('click', () => this.nextStep());
     }
 
+
     async showProcess(pointCloudId) {
         if (this.pointCloudId !== pointCloudId) {
+            // Only reset and reload if it's a different model
             this.pointCloudId = pointCloudId;
             this.currentStep = 0;
             this.cachedData = {};
+            // Start loading all data asynchronously
             this.loadAllStepData();
         }
 
         this.container.style.display = 'block';
         this.updateNavigation();
+        // Display the first step
         this.updateStep(this.currentStep);
     }
 
@@ -177,6 +181,7 @@ class PointCloudProcessVisualization {
     hide() {
         this.container.style.display = 'none';
     }
+
 }
 
 export default PointCloudProcessVisualization;

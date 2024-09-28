@@ -4,6 +4,7 @@ import VisualDataManager from './VisualDataManager.js';
 import PointCloudManager from './PointCloudManager.js';
 import ModelManager from './ModelManager.js';
 import ReconstructionProcess from './ReconstructionProcess.js';
+import PointCloudProcessVisualization from './PointCloudProcessVisualization.js';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -11,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiService = new ApiService(API_URL);
     const notificationSystem = new NotificationSystem();
     const visualDataManager = new VisualDataManager(apiService, notificationSystem);
-    const pointCloudManager = new PointCloudManager(apiService, notificationSystem);
+    const processVisualization = new PointCloudProcessVisualization('point-cloud-process-container', apiService);
+    const pointCloudManager = new PointCloudManager(apiService, notificationSystem, processVisualization);
     const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
     const modelManager = new ModelManager(apiService, notificationSystem, reconstructionProcess);
 
@@ -20,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.pointCloudManager = pointCloudManager;
     window.modelManager = modelManager;
     window.reconstructionProcess = reconstructionProcess;
+    window.processVisualization = processVisualization;
     window.notificationSystem = notificationSystem;  // Make notificationSystem globally accessible
 
     // Initialize managers (if they have init methods)
@@ -67,5 +70,6 @@ function openTab(evt, tabName) {
     // If switching to the PointCloudTab and there's an active visualization, restore it
     if (tabName === 'PointCloudTab' && pointCloudManager.hasActiveVisualization()) {
         pointCloudManager.restoreProcessVisualization();
+//        pointCloudManager.restoreProcessVisualization();
     }
 }

@@ -2,12 +2,12 @@ import DromoUtils from './DromoUtils.js';
 import PointCloudProcessVisualization from './PointCloudProcessVisualization.js';
 
 class PointCloudManager {
-    constructor(apiService, notificationSystem) {
+    constructor(apiService, notificationSystem, processVisualization) {
         this.apiService = apiService;
         this.notificationSystem = notificationSystem;
+        this.processVisualization = processVisualization;
         this.pointCloudList = document.getElementById('pointCloudList');
         this.pointCloudDetails = document.getElementById('pointCloudDetails');
-        this.processVisualization = new PointCloudProcessVisualization('point-cloud-process-container', apiService);
         this.uploadArea = document.getElementById('pointCloudUploadArea');
         this.uploadBtn = document.getElementById('uploadPointCloudBtn');
         this.refreshBtn = document.getElementById('refreshPointCloudListBtn');
