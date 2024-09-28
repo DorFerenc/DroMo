@@ -29,13 +29,62 @@ class PreprocessService:
         input_path = ply_file['file_path']
 
         # Initialize PLY processor
-        ply_processor = PLYProcessor(input_path)
+        ply_processor = PLYProcessor(input_path, ply_id)
 
         # Remove the background and extract the main object
-        ply_processor.preprocess()
+        # ply_processor.preprocess()
+        distance_threshold = 0.015
+        ransac_n = 3
+        num_iterations = 1000
+        cluster_eps = 0.02
+        min_points = 50
+
+        #load the pointCloud
+        pcd = ply_processor.load_point_cloud()
+        ply_processor.main_object = pcd
+
+        # Center the point cloud
+        center_pcd = ply_processor.center_point_cloud(pcd)
+
+        # Remove statistical outliers
+        filtered_pcd = ply_processor.remove_statistical_outliers(center_pcd)
+
+        # Voxel downsampling
+        filtered_pcd = ply_processor.voxel_downsample(filtered_pcd)
+
+        # Estimate normals
+        filtered_pcd = ply_processor.estimate_normals(filtered_pcd)
+
+        # Plane segmention
+        remaining_cloud = ply_processor.segment_plane(filtered_pcd, distance_threshold, ransac_n, num_iterations)
+
+        #clustering
+        main_object = ply_processor.cluster_points(remaining_cloud, cluster_eps, min_points)
+
+        # Remove statistical outliers, Center the point cloud, and Estimate normals again
+        main_object = ply_processor.remove_statistical_outliers(main_object, nn =30, std_multiplier=2.0)
+        main_object = ply_processor.center_point_cloud(main_object)
+        main_object = ply_processor.estimate_normals(main_object, max_nn=16)
+        ply_processor.main_object = main_object
+
+        # Object bottom completion
+        complete_object, bottom = ply_processor.complete_bottom(main_object)
+
+        # Final object center
+        complete_object = ply_processor.center_point_cloud(complete_object)
+        ply_processor.main_object = complete_object
+
+
 
         # Save the processed point cloud to the database and a CSV file
         point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])
+        filtered_pcd = ply_processor.voxel_downsample(filtered_pcd, voxel_size=0.005)
+
+        #ply_processor.save_ply_file_system(pcd, title="original_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(filtered_pcd, title="filtered_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(main_object, title="removed_background_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(bottom, title="bottom_surface_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(complete_object, title="complete_object_ply", id=point_cloud_id)
 
         # # Update the PLY document with processing information
         # db.ply_files.update_one(
@@ -75,3 +124,11 @@ class PreprocessService:
                 'point_cloud_id': ply_file.get('point_cloud_id', None),
             }
         return None
+
+
+    def get_ply(self, ply_id, param):
+        temp_PLY_Processor = PLYProcessor(None, ply_id)
+        ply = temp_PLY_Processor.get_ply(param)
+        if ply is not None:
+            ply = temp_PLY_Processor.format_point_cloud_to_serializable(ply)
+        return ply

@@ -1,4 +1,5 @@
 """API routes for the DROMO system."""
+import logging
 
 from flask import Blueprint, request, jsonify, current_app, send_file, abort, Response
 from werkzeug.utils import secure_filename
@@ -432,3 +433,15 @@ def get_textured_mesh_data(model_id):
     if data is None:
         return jsonify({"error": "Model not found"}), 404
     return jsonify(data)
+
+########################################################################
+# Preprocess Visuals
+########################################################################
+@api_bp.route('/api/preprocess/<param>/<ply_id>')
+def get_preprocess_process_ply(param, ply_id):
+    current_app.logger.info(f"Getting {param} ply data for preprocess visuals: {ply_id}")
+    data = preprocess_service.get_ply(ply_id, param)
+    if data is None:
+        return jsonify({"error": f"{param} ply not found"}), 404
+    return jsonify([data])
+

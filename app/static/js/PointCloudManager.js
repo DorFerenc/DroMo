@@ -1,9 +1,11 @@
 import DromoUtils from './DromoUtils.js';
+import PointCloudProcessVisualization from './PointCloudProcessVisualization.js';
 
 class PointCloudManager {
-    constructor(apiService, notificationSystem) {
+    constructor(apiService, notificationSystem, processVisualization) {
         this.apiService = apiService;
         this.notificationSystem = notificationSystem;
+        this.processVisualization = processVisualization;
         this.pointCloudList = document.getElementById('pointCloudList');
         this.pointCloudDetails = document.getElementById('pointCloudDetails');
         this.uploadArea = document.getElementById('pointCloudUploadArea');
@@ -13,6 +15,8 @@ class PointCloudManager {
         this.nameInput = document.getElementById('pointCloudName');
         this.fileNameElement = this.uploadArea.querySelector('.file-name');
         this.isUploading = false;
+        this.activePointCloudId = null;
+
     }
 
     init() {
@@ -121,7 +125,9 @@ class PointCloudManager {
                 li.innerHTML = `
                     <span>${DromoUtils.truncateString(pc.name, 30)}</span>
                     <div>
+
                         <button onclick="window.pointCloudManager.getPointCloudDetails('${pc.id}')">Details</button>
+                        <button onclick="pointCloudManager.visualizePointCloud('${pc.id}')">Visualize</button>
                         <button onclick="window.pointCloudManager.reconstructPointCloud('${pc.id}')">Reconstruct</button>
                         <button onclick="window.pointCloudManager.downloadPointCloud('${pc.id}')">Download CSV</button>
                         <button class="delete" onclick="window.pointCloudManager.deletePointCloud('${pc.id}')">Delete</button>
@@ -158,6 +164,29 @@ class PointCloudManager {
         }
     }
 
+     async visualizePointCloud(id) {
+            try {
+                const pointCloudDetails = await this.apiService.get(`/point_clouds/${id}`);
+
+                // Clear old visualization data
+                this.processVisualization.clearVisualization();
+
+                // Update the active point cloud ID
+                this.activePointCloudId = id;
+
+                // Trigger the point cloud process visualization
+                this.processVisualization.showProcess(id);
+
+                // Switch to the PointCloudTab
+                const pointCloudTab = document.querySelector('[data-tab="PointCloudTab"]');
+                if (pointCloudTab) {
+                    pointCloudTab.click();
+                }
+            } catch (error) {
+                this.notificationSystem.show('Error visualizing point cloud: ' + error.message, 'error');
+            }
+    }
+
     downloadPointCloud(id) {
         window.location.href = `${this.apiService.baseUrl}/point_clouds/${id}/download`;
     }
@@ -173,6 +202,18 @@ class PointCloudManager {
             }
         }
     }
+
+    hasActiveVisualization() {
+        return this.activePointCloudId !== null;
+    }
+
+    // restore the point cloud process visualization
+    restoreProcessVisualization() {
+        if (this.hasActiveVisualization()) {
+            this.processVisualization.showProcess(this.activePointCloudId);
+        }
+    }
+
 }
 
 export default PointCloudManager;
