@@ -141,3 +141,62 @@ def test_get_progress_not_processed(client, mongo):
     assert result['ply_id'] == ply_id
     assert result['processed'] is False
     assert result['point_cloud_id'] is None
+
+
+@pytest.fixture
+def point_cloud_data():
+    """Fixture to provide sample point cloud data."""
+    return {
+        '_id': ObjectId(),
+        'name': 'Test Point Cloud',
+        'points': [[0, 0, 0], [1, 1, 1], [2, 2, 2]],
+        'colors': [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
+    }
+
+def test_get_preprocess_process_ply_success(client, mongo, point_cloud_data):
+    """
+    Test the /api/preprocess/<param>/<ply_id> endpoint.
+    """
+    # Insert test point cloud data
+    mongo.point_clouds.insert_one(point_cloud_data)
+
+    param = "filtered_ply"
+    ply_id = str(point_cloud_data["_id"])
+
+    mock_ply_data = {
+        'type': 'scatter3d',
+        'mode': 'markers',
+        'x': [0, 1, 2],
+        'y': [0, 1, 2],
+        'z': [0, 1, 2],
+        'marker': {
+            'size': 1.5,
+            'color': [[255, 0, 0], [0, 255, 0], [0, 0, 255]],
+            'opacity': 1
+        }
+    }
+
+    # Mock PreprocessService.get_ply
+    with patch('app.services.preprocess_service.PreprocessService.get_ply', return_value=mock_ply_data) as mock_get_ply:
+        response = client.get(f'/api/preprocess/{param}/{ply_id}')
+
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data == [mock_ply_data]
+    mock_get_ply.assert_called_once_with(ply_id, param)
+
+def test_get_preprocess_process_ply_not_found(client, mongo):
+    """
+    Test the /api/preprocess/<param>/<ply_id> endpoint when PLY is not found.
+    """
+    param = "filtered_ply"
+    ply_id = str(ObjectId())  # Non-existent ID
+
+    # Mock PreprocessService.get_ply to return None
+    with patch('app.services.preprocess_service.PreprocessService.get_ply', return_value=None) as mock_get_ply:
+        response = client.get(f'/api/preprocess/{param}/{ply_id}')
+
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert data == {"error": f"{param} ply not found"}
+    mock_get_ply.assert_called_once_with(ply_id, param)

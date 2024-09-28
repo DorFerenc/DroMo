@@ -438,7 +438,7 @@ def get_textured_mesh_data(model_id):
 # Preprocess Visuals
 ########################################################################
 @api_bp.route('/api/preprocess/<param>/<ply_id>')
-def get_preprocess_original_ply(param, ply_id):
+def get_preprocess_process_ply(param, ply_id):
     current_app.logger.info(f"Getting {param} ply data for preprocess visuals: {ply_id}")
     data = preprocess_service.get_ply(ply_id, param)
     if data is None:
