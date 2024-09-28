@@ -56,4 +56,8 @@ function openTab(evt, tabName) {
     if (tabName === 'ModelTab' && modelManager.hasActiveReconstruction()) {
         modelManager.restoreReconstructionProcess();
     }
+    // If switching to the PointCloudTab and there's an active visualization, restore it
+    if (tabName === 'PointCloudTab' && pointCloudManager.hasActiveVisualization()) {
+        pointCloudManager.restoreProcessVisualization();
+    }
 }

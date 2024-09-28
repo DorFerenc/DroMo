@@ -3,6 +3,7 @@ from app.db.mongodb import get_db
 import os
 from bson import ObjectId
 
+from app.services.recon_proc_visualization_service import ReconProcVisualizationService
 from app.services.video_service import VideoService
 
 
@@ -29,7 +30,7 @@ class PreprocessService:
         input_path = ply_file['file_path']
 
         # Initialize PLY processor
-        ply_processor = PLYProcessor(input_path)
+        ply_processor = PLYProcessor(input_path, ply_id)
 
         # Remove the background and extract the main object
         # ply_processor.preprocess()
@@ -68,14 +69,20 @@ class PreprocessService:
         ply_processor.main_object = main_object
 
         # Object bottom completion
-        main_object = ply_processor.complete_bottom(main_object)
+        complete_object = ply_processor.complete_bottom(main_object)
 
         # Final object center
-        main_object = ply_processor.center_point_cloud(main_object)
-        ply_processor.main_object = main_object
+        complete_object = ply_processor.center_point_cloud(complete_object)
+        ply_processor.main_object = complete_object
+
+
 
         # Save the processed point cloud to the database and a CSV file
         point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])
+        ply_processor.save_ply_file_system(pcd, title="original_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(filtered_pcd, title="filtered_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(main_object, title="removed_background_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(complete_object, title="complete_object_ply", id=point_cloud_id)
 
         # # Update the PLY document with processing information
         # db.ply_files.update_one(
@@ -115,3 +122,11 @@ class PreprocessService:
                 'point_cloud_id': ply_file.get('point_cloud_id', None),
             }
         return None
+
+
+    def get_ply(self, ply_id, param):
+        temp_PLY_Processor = PLYProcessor(None, ply_id)
+        ply = temp_PLY_Processor.get_ply(param)
+        if ply is not None:
+            ply = temp_PLY_Processor.format_point_cloud_to_serializable(ply)
+        return ply

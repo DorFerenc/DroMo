@@ -2,17 +2,19 @@ import logging
 
 import open3d as o3d
 import numpy as np
-
+import os
 
 from app.models.point_cloud import PointCloud
+from app.services.recon_proc_visualization_service import ReconProcVisualizationService
 
 
 class PLYProcessor:
     """Handles operations related to processing and saving PLY files."""
 
-    def __init__(self, ply_file):
+    def __init__(self, ply_file, ply_id):
         self.ply_file = ply_file
         self.main_object = None
+        self.ply_id = ply_id
 
     def preprocess(self, distance_threshold=0.015, ransac_n=3, num_iterations=1000, cluster_eps=0.02,
                           min_points=50):
@@ -149,9 +151,10 @@ class PLYProcessor:
         logging.info("Completing the bottom of the object.")
         hull = self.compute_convex_hull(pcd)
         outer_shape_pcd = self.sample_hull_surface(hull)
-
         bottom_surface_points = self.extract_bottom_surface(outer_shape_pcd, depth)
         bottom_surface_pcd = self.create_bottom_surface_pcd(bottom_surface_points)
+        self.save_ply_file_system(bottom_surface_pcd, title="bottom_surface_ply", id=self.ply_id)
+
         logging.info("Bottom surface completed successfully.")
         return pcd + bottom_surface_pcd
 
@@ -218,3 +221,103 @@ class PLYProcessor:
         point_cloud_id = point_cloud.save()
         print(f"3D reconstruction complete. {len(formatted_points)} points saved to the database with ID {point_cloud_id}.")
         return point_cloud_id
+
+    def save_ply_file_system(self, main_object, title, id=None):
+        """
+        Save a PLY file to the file system in the ply_preprocess folder inside a folder named with the given id.
+
+        Args:
+        main_object (open3d.geometry.PointCloud): The 3D object to be saved as PLY.
+        title (str): The title of the PLY file.
+        id (str): The identifier for the folder where the PLY file will be saved.
+
+        Returns:
+        str: The full path of the saved PLY file.
+        """
+        if id is None:
+            raise ValueError("An ID must be provided to save the PLY file.")
+
+        # Define the base directory and create it if it doesn't exist
+        base_dir = "/app/app/ply_preprocess_visuals"
+        os.makedirs(base_dir, exist_ok=True)
+
+        # Create the directory for this specific ID
+        ply_dir = os.path.join(base_dir, title)
+        os.makedirs(ply_dir, exist_ok=True)
+
+        # Create the full file path
+        file_name = f"{str(id)}.ply"
+        file_path = os.path.join(ply_dir, file_name)
+
+        # Save the PLY file
+        try:
+            # Ensure the main_object is a PointCloud
+            if not isinstance(main_object, o3d.geometry.PointCloud):
+                raise TypeError("main_object must be an Open3D PointCloud")
+
+            success = o3d.io.write_point_cloud(file_path, main_object)
+            if not success:
+                raise IOError("Failed to write point cloud")
+
+            print(f"PLY file saved successfully at: {file_path}")
+        except Exception as e:
+            print(f"Error saving PLY file: {str(e)}")
+            return None
+
+        return file_path
+
+    def numpy_to_python(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+
+    def format_point_cloud_to_serializable(self, ply):
+        if ply is None:
+            raise ValueError("Main object not processed yet. Run `remove_background()` first.")
+
+        # Convert point cloud to numpy arrays
+        points = np.asarray(ply.points)  # Shape (N, 3)
+        colors = np.asarray(ply.colors)  # Shape (N, 3)
+
+        if len(colors) == 0:
+            logging.warning("No colors found in the main object. Defaulting to black color.")
+            colors = np.zeros((len(points), 3))  # Initialize with zeros
+            colors[:, 1] = 1  # Set green channel to 1 for green color
+
+        # Scale color values from [0, 1] to [0, 255]
+        colors = (colors * 255).astype(np.uint8)
+
+        # Convert the points_3d array to a list of dictionaries
+        formatted_points = np.array([[float(p[0]), float(p[1]), float(p[2])] for p in points])
+        formatted_colors = np.array([[float(p[0]), float(p[1]), float(p[2])] for p in colors])
+        print(f"3D reconstruction complete. {len(formatted_points)}  {len(formatted_colors)}")
+
+        # Save PointCloud
+        point_cloud = PointCloud("format", formatted_points, formatted_colors)
+        serializable = {
+            'type': 'scatter3d',
+            'mode': 'markers',
+            'x': self.numpy_to_python(point_cloud.points[:, 0]),
+            'y': self.numpy_to_python(point_cloud.points[:, 1]),
+            'z': self.numpy_to_python(point_cloud.points[:, 2]),
+            'marker': {
+                'size': 1.5,
+                'color': self.numpy_to_python(
+                    point_cloud.colors) if point_cloud.colors is not None else 'rgb(100, 100, 100)',
+                'opacity': 1
+            }
+        }
+        return serializable
+    def get_ply(self, param):
+        try:
+            pcd = o3d.io.read_point_cloud("/app/app/ply_preprocess_visuals/"+param+"/" + self.ply_id + ".ply")
+            if not pcd.has_points():
+                pcd = None
+            return pcd
+        except:
+            logging.error("error in load original ply: " + self.ply_id)
+            return None
