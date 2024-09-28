@@ -6,28 +6,23 @@ class PointCloudProcessVisualization {
         this.pointCloudId = null;
         this.steps = [
             {
-                title: "Original pointCloud",
-                explanation: "test </span>",
-                dataUrl: '/preprocess/original_ply/'
-            },
-            {
                 title: "Filtered and Normalized",
-                explanation: "test </span>",
+                explanation: "In this initial step, we clean and standardize the raw point cloud data. We remove statistical outliers (points that are far from their neighbors), perform voxel downsampling (reducing the number of points while maintaining the overall shape), and estimate surface normals (directions perpendicular to the surface at each point). This prepares the data for further processing. <span class='technical'>[Technical: Statistical outlier removal, voxel grid filtering, and normal estimation using PCA are applied.]</span>",
                 dataUrl: '/preprocess/filtered_ply/'
             },
             {
                 title: "Remove Background",
-                explanation: "test </span>",
+                explanation: "Here, we separate the main object from its background. We use a plane segmentation algorithm to identify and remove the largest flat surface (usually the ground or table). Then, we cluster the remaining points to isolate the main object. <span class='technical'>[Technical: RANSAC plane segmentation is used with adaptive thresholding based on object height. DBSCAN clustering is then applied to identify the main object cluster.]</span>",
                 dataUrl: '/preprocess/removed_background_ply/'
             },
             {
-                title: "Bottom Surface ",
-                explanation: "test </span>",
+                title: "Bottom Surface",
+                explanation: "Often, 3D scans miss the bottom of objects where they contact the surface they're sitting on. In this step, we artificially create this missing bottom surface. We compute a convex hull of the object, sample its surface, and then extract and add a flat bottom. <span class='technical'>[Technical: Convex hull computation, surface sampling, and planar surface generation are used to create a realistic object bottom.]</span>",
                 dataUrl: '/preprocess/bottom_surface_ply/'
             },
             {
-                title: "Complete object",
-                explanation: "test </span>",
+                title: "Complete Object",
+                explanation: "This final step shows the fully preprocessed object, combining all previous steps. The point cloud now represents a complete 3D model of the scanned object, with background removed and bottom surface added. This preprocessed point cloud is ready for further 3D modeling or analysis tasks. <span class='technical'>[Technical: This is the result of all previous preprocessing steps combined, providing a clean, complete point cloud representation of the object.]</span>",
                 dataUrl: '/preprocess/complete_object_ply/'
             }
         ];

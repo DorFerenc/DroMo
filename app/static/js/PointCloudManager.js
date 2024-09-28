@@ -15,6 +15,8 @@ class PointCloudManager {
         this.nameInput = document.getElementById('pointCloudName');
         this.fileNameElement = this.uploadArea.querySelector('.file-name');
         this.isUploading = false;
+        this.activePointCloudId = null;
+
     }
 
     init() {

@@ -42,11 +42,11 @@ class PLYProcessor:
         main_object = self.estimate_normals(main_object, max_nn=16)
         self.main_object = main_object
 
-        main_object = self.complete_bottom(main_object)
+        main_object, bottom = self.complete_bottom(main_object)
 
         main_object = self.center_point_cloud(main_object)
         self.main_object = main_object
-        return main_object
+        return main_object, bottom
 
 
     def load_point_cloud(self):
@@ -153,10 +153,9 @@ class PLYProcessor:
         outer_shape_pcd = self.sample_hull_surface(hull)
         bottom_surface_points = self.extract_bottom_surface(outer_shape_pcd, depth)
         bottom_surface_pcd = self.create_bottom_surface_pcd(bottom_surface_points)
-        self.save_ply_file_system(bottom_surface_pcd, title="bottom_surface_ply", id=self.ply_id)
 
         logging.info("Bottom surface completed successfully.")
-        return pcd + bottom_surface_pcd
+        return pcd + bottom_surface_pcd, bottom_surface_pcd
 
     def compute_convex_hull(self, pcd):
         """Compute the convex hull of the point cloud."""
@@ -298,7 +297,7 @@ class PLYProcessor:
 
         # Save PointCloud
         point_cloud = PointCloud("format", formatted_points, formatted_colors)
-        serializable = {
+        return {
             'type': 'scatter3d',
             'mode': 'markers',
             'x': self.numpy_to_python(point_cloud.points[:, 0]),
@@ -311,7 +310,7 @@ class PLYProcessor:
                 'opacity': 1
             }
         }
-        return serializable
+
     def get_ply(self, param):
         try:
             pcd = o3d.io.read_point_cloud("/app/app/ply_preprocess_visuals/"+param+"/" + self.ply_id + ".ply")

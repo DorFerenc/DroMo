@@ -70,6 +70,5 @@ function openTab(evt, tabName) {
     // If switching to the PointCloudTab and there's an active visualization, restore it
     if (tabName === 'PointCloudTab' && pointCloudManager.hasActiveVisualization()) {
         pointCloudManager.restoreProcessVisualization();
-//        pointCloudManager.restoreProcessVisualization();
     }
 }

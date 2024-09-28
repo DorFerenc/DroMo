@@ -68,7 +68,7 @@ class PreprocessService:
         ply_processor.main_object = main_object
 
         # Object bottom completion
-        complete_object = ply_processor.complete_bottom(main_object)
+        complete_object, bottom = ply_processor.complete_bottom(main_object)
 
         # Final object center
         complete_object = ply_processor.center_point_cloud(complete_object)
@@ -78,9 +78,12 @@ class PreprocessService:
 
         # Save the processed point cloud to the database and a CSV file
         point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])
-        ply_processor.save_ply_file_system(pcd, title="original_ply", id=point_cloud_id)
+        filtered_pcd = ply_processor.voxel_downsample(filtered_pcd, voxel_size=0.005)
+
+        #ply_processor.save_ply_file_system(pcd, title="original_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(filtered_pcd, title="filtered_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(main_object, title="removed_background_ply", id=point_cloud_id)
+        ply_processor.save_ply_file_system(bottom, title="bottom_surface_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(complete_object, title="complete_object_ply", id=point_cloud_id)
 
         # # Update the PLY document with processing information

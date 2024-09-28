@@ -443,5 +443,5 @@ def get_preprocess_original_ply(param, ply_id):
     data = preprocess_service.get_ply(ply_id, param)
     if data is None:
         return jsonify({"error": f"{param} ply not found"}), 404
-    return jsonify(data)
+    return jsonify([data])
 
