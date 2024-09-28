@@ -2,7 +2,7 @@ import os
 from bson import ObjectId
 from flask import current_app
 from app.db.mongodb import get_db
-from app.reconstruction.point_cloud_to_mesh import PointCloudToMesh
+from app.reconstruction.point_cloud_to_mesh import PointCloudToMesh, MeshRefiner
 from app.reconstruction.texture_mapper import TextureMapper
 from app.reconstruction.mesh_to_obj_converter import MeshToOBJConverter
 from app.reconstruction.reconstruction_utils import generate_colors
@@ -49,11 +49,20 @@ class ReconstructionService:
                 ReconstructionService.logger.error(f"Error generating mesh: {str(e)}")
                 raise ValueError(f"Failed to generate mesh: {str(e)}")
 
+            # Refine the mesh
+            ReconstructionService.logger.info("Refining the generated mesh")
+            mesh_refiner = MeshRefiner(mesh)
+            try:
+                refined_mesh = mesh_refiner.refine()
+            except Exception as e:
+                ReconstructionService.logger.error(f"Error refining mesh: {str(e)}")
+                raise ValueError(f"Failed to refine mesh: {str(e)}")
+
             # Apply textures
             ReconstructionService.logger.info("Applying textures to mesh")
             texture_mapper = TextureMapper()
             try:
-                texture_mapper.load_mesh(mesh)
+                texture_mapper.load_mesh(refined_mesh)
                 texture_mapper.load_point_cloud_with_colors(points, colors)
                 texture_mapper.apply_texture()
             except Exception as e:
