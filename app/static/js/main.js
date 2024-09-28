@@ -20,11 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.pointCloudManager = pointCloudManager;
     window.modelManager = modelManager;
     window.reconstructionProcess = reconstructionProcess;
+    window.notificationSystem = notificationSystem;  // Make notificationSystem globally accessible
 
     // Initialize managers (if they have init methods)
-    if (typeof visualDataManager.init === 'function') visualDataManager.init();
-    if (typeof pointCloudManager.init === 'function') pointCloudManager.init();
+    visualDataManager.init();
+    pointCloudManager.init();
+    // if (typeof visualDataManager.init === 'function') visualDataManager.init();
+    // if (typeof pointCloudManager.init === 'function') pointCloudManager.init();
     if (typeof modelManager.init === 'function') modelManager.init();
+
+    // Replace any remaining alert() calls with notificationSystem
+    window.alert = (message) => {
+        notificationSystem.show(message, 'info');
+    };
 
     // Set up tab functionality
     const tabLinks = document.querySelectorAll('.tablinks');

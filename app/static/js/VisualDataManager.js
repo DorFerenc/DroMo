@@ -6,6 +6,13 @@ class VisualDataManager {
         this.notificationSystem = notificationSystem;
         this.visualDataList = document.getElementById('visualDataList');
         this.visualDataDetails = document.getElementById('visualDataDetails');
+        this.uploadArea = document.getElementById('plyUploadArea');
+        this.uploadBtn = document.getElementById('uploadPLYBtn');
+        this.refreshBtn = document.getElementById('refreshVisualDataListBtn');
+        this.fileInput = document.getElementById('plyFile');
+        this.titleInput = document.getElementById('plyTitle');
+        this.fileNameElement = this.uploadArea.querySelector('.file-name');
+        this.isUploading = false;
     }
 
     init() {
@@ -14,21 +21,58 @@ class VisualDataManager {
     }
 
     initEventListeners() {
-        const uploadBtn = document.getElementById('uploadPLYBtn');
-        const refreshBtn = document.getElementById('refreshVisualDataListBtn');
-
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', () => this.uploadPLY());
+        if (this.uploadArea) {
+            this.uploadArea.addEventListener('click', () => this.fileInput.click());
+            this.uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+            this.uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            this.uploadArea.addEventListener('drop', this.handleDrop.bind(this));
         }
 
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.listVisualDatas());
+        if (this.fileInput) {
+            this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+        }
+
+        if (this.uploadBtn) {
+            this.uploadBtn.addEventListener('click', () => this.uploadPLY());
+        }
+
+        if (this.refreshBtn) {
+            this.refreshBtn.addEventListener('click', () => this.listVisualDatas());
+        }
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        this.uploadArea.classList.add('dragover');
+    }
+
+    handleDragLeave() {
+        this.uploadArea.classList.remove('dragover');
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        this.uploadArea.classList.remove('dragover');
+        this.handleFiles(e.dataTransfer.files);
+    }
+
+    handleFiles(files) {
+        if (files.length > 0) {
+            const fileName = files[0].name;
+            this.fileNameElement.textContent = fileName;
+            this.fileNameElement.style.display = 'block';
+            this.fileInput.files = files;
         }
     }
 
     async uploadPLY() {
-        const title = document.getElementById('plyTitle').value;
-        const file = document.getElementById('plyFile').files[0];
+        if (this.isUploading) {
+            this.notificationSystem.show('Upload already in progress', 'info');
+            return;
+        }
+
+        const title = this.titleInput.value;
+        const file = this.fileInput.files[0];
 
         if (!title || !file) {
             this.notificationSystem.show('Please provide both title and file', 'error');
@@ -36,6 +80,10 @@ class VisualDataManager {
         }
 
         try {
+            this.isUploading = true;
+            this.uploadBtn.disabled = true;
+            this.uploadBtn.textContent = 'Uploading...';
+
             DromoUtils.validateFileSize(file, 100); // 100MB max file size
 
             const formData = new FormData();
@@ -46,11 +94,24 @@ class VisualDataManager {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             this.notificationSystem.show('PLY file uploaded successfully!', 'success');
+            this.resetForm();
             this.listVisualDatas();
         } catch (error) {
             this.notificationSystem.show('Error uploading PLY file: ' + error, 'error');
+        } finally {
+            this.isUploading = false;
+            this.uploadBtn.disabled = false;
+            this.uploadBtn.textContent = 'Upload';
         }
     }
+
+    resetForm() {
+        this.fileInput.value = '';
+        this.titleInput.value = '';
+        this.fileNameElement.textContent = '';
+        this.fileNameElement.style.display = 'none';
+    }
+
 
     async listVisualDatas() {
         try {
@@ -61,9 +122,9 @@ class VisualDataManager {
                 li.innerHTML = `
                     <span>${DromoUtils.truncateString(visual_data.title, 30)}</span>
                     <div>
-                        <button onclick="visualDataManager.getVisualDataDetails('${visual_data.id}')">Details</button>
-                        <button onclick="visualDataManager.preprocessVisualData('${visual_data.id}')">Preprocess</button>
-                        <button class="delete" onclick="visualDataManager.deleteVisualData('${visual_data.id}')">Delete</button>
+                        <button onclick="window.visualDataManager.getVisualDataDetails('${visual_data.id}')">Details</button>
+                        <button onclick="window.visualDataManager.preprocessVisualData('${visual_data.id}')">Preprocess</button>
+                        <button class="delete" onclick="window.visualDataManager.deleteVisualData('${visual_data.id}')">Delete</button>
                     </div>
                 `;
                 this.visualDataList.appendChild(li);
@@ -90,7 +151,11 @@ class VisualDataManager {
     async preprocessVisualData(id) {
         try {
             const response = await this.apiService.post(`/preprocess/${id}`);
-            this.notificationSystem.show(`Preprocessing started. Status: ${response.status}`, 'success');
+            if (response && response.status) {
+                this.notificationSystem.show(`Preprocessing Completed. Status: ${response.status}`, 'success');
+            } else {
+                this.notificationSystem.show('Preprocessing Completed', 'success');
+            }
         } catch (error) {
             this.notificationSystem.show('Error preprocessing visual_data: ' + error.message, 'error');
         }
@@ -100,7 +165,7 @@ class VisualDataManager {
         if (confirm('Are you sure you want to delete this visual_data?')) {
             try {
                 await this.apiService.delete(`/visual_datas/${id}`);
-                this.notificationSystem.show('visual_data deleted successfully', 'success');
+                this.notificationSystem.show('visual_data:' + id + ' deleted successfully', 'success');
                 this.listVisualDatas();
             } catch (error) {
                 this.notificationSystem.show('Error deleting visual_data: ' + error.message, 'error');
