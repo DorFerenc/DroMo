@@ -3,8 +3,7 @@ from app.db.mongodb import get_db
 import os
 from bson import ObjectId
 
-from app.services.recon_proc_visualization_service import ReconProcVisualizationService
-from app.services.video_service import VideoService
+from app.services.visual_data_service import VisualDataService
 
 
 class PreprocessService:
@@ -22,7 +21,7 @@ class PreprocessService:
         Returns:
             dict: The processed PLY file data if found, None otherwise.
         """
-        ply_file = VideoService.get_video(ply_id)
+        ply_file = VisualDataService.get_visual_data(ply_id)
 
         if not ply_file:
             return None
@@ -110,7 +109,7 @@ class PreprocessService:
         Returns:
             dict: The progress of the PLY file processing if found, None otherwise.
         """
-        ply_file = VideoService.get_video(ply_id)
+        ply_file = VisualDataService.get_visual_data(ply_id)
 
         if not ply_file:
             return None

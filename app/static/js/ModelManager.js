@@ -24,7 +24,7 @@ class ModelManager {
             models.forEach(model => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <span>Model ID: ${model.id}</span>
+                    <span>Model Name: ${model.name}</span>
                     <div>
                         <button onclick="modelManager.getModelDetails('${model.id}')">Details</button>
                         <button onclick="modelManager.visualizeModel('${model.id}')">Visualize</button>

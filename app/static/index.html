@@ -28,34 +28,36 @@
     <div class="container">
         <div class="tab-container">
             <div class="tab">
-                <button class="tablinks" data-tab="VideoTab"><i class="fas fa-video"></i> Videos</button>
+                <button class="tablinks" data-tab="VisualDataTab"><i class="fas fa-video"></i> Visual Data</button>
                 <button class="tablinks" data-tab="PointCloudTab"><i class="fas fa-dot-circle"></i> Point Clouds</button>
                 <button class="tablinks" data-tab="ModelTab"><i class="fas fa-cube"></i> 3D Models</button>
             </div>
 
-            <div id="VideoTab" class="tabcontent">
+            <div id="VisualDataTab" class="tabcontent">
                 <div class="section">
                     <h2>Upload PLY File</h2>
-                    <div class="upload-area" id="plyUploadArea">
-                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                        <p>Drag & Drop your PLY file here or click to browse</p>
-                        <input type="file" id="plyFile" accept=".ply" style="display: none;">
-                        <p id="plyFileName" class="file-name"></p>
-                    </div>
-                    <input type="text" id="plyTitle" placeholder="PLY File Title">
-                    <button id="uploadPLYBtn" class="button">Upload</button>
+                    <form id="plyUploadForm">
+                        <div class="upload-area" id="plyUploadArea">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p>Drag & Drop your PLY file here or click to browse</p>
+                            <input type="file" id="plyFile" accept=".ply" style="display: none;">
+                            <p id="plyFileName" class="file-name"></p>
+                        </div>
+                        <input type="text" id="plyTitle" placeholder="PLY File Title">
+                        <button id="uploadPLYBtn" class="button">Upload</button>
+                    </form>
                 </div>
                 <div class="section collapsible">
-                    <h2>Video List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <h2>Visual Data List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
                     <div class="content">
-                        <button id="refreshVideoListBtn" class="button"><i class="fas fa-sync"></i> Refresh Video List</button>
-                        <ul id="videoList"></ul>
+                        <button id="refreshVisualDataListBtn" class="button"><i class="fas fa-sync"></i> Refresh Visual Data List</button>
+                        <ul id="visualDataList"></ul>
                     </div>
                 </div>
                 <div class="section collapsible">
-                    <h2>Video Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
+                    <h2>Visual Data Details <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
                     <div class="content">
-                        <div id="videoDetails"></div>
+                        <div id="visualDataDetails"></div>
                     </div>
                 </div>
             </div>
@@ -63,14 +65,16 @@
             <div id="PointCloudTab" class="tabcontent">
                 <div class="section">
                     <h2>Upload Point Cloud</h2>
-                    <div class="upload-area" id="pointCloudUploadArea">
-                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                        <p>Drag & Drop your Point Cloud file here or click to browse</p>
-                        <input type="file" id="pointCloudFile" accept=".txt,.csv" style="display: none;">
-                        <p id="pointCloudFileName" class="file-name"></p>
-                    </div>
-                    <input type="text" id="pointCloudName" placeholder="Point Cloud Name">
-                    <button id="uploadPointCloudBtn" class="button">Upload</button>
+                    <form id="pointCloudUploadForm">
+                        <div class="upload-area" id="pointCloudUploadArea">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p>Drag & Drop your Point Cloud file here or click to browse</p>
+                            <input type="file" id="pointCloudFile" accept=".txt,.csv" style="display: none;">
+                            <p id="pointCloudFileName" class="file-name"></p>
+                        </div>
+                        <input type="text" id="pointCloudName" placeholder="Point Cloud Name">
+                        <button id="uploadPointCloudBtn" class="button">Upload</button>
+                    </form>
                 </div>
                 <div class="section collapsible">
                     <h2>Point Cloud List <button class="collapse-btn"><i class="fas fa-chevron-up"></i></button></h2>
@@ -151,6 +155,11 @@
 
                 document.getElementById(tabName).style.display = "block";
                 evt.currentTarget.classList.add("active");
+
+                // If switching to the ModelTab and there's an active reconstruction, restore it
+                if (tabName === 'ModelTab' && window.modelManager && window.modelManager.hasActiveReconstruction()) {
+                    window.modelManager.restoreReconstructionProcess();
+                }
             }
 
             // Add collapsible functionality
@@ -174,89 +183,6 @@
                     btn.querySelector('i').classList.toggle('fa-chevron-up');
                 });
             });
-
-            // Improved drag and drop functionality for file uploads
-            ['plyUploadArea', 'pointCloudUploadArea'].forEach(areaId => {
-                const area = document.getElementById(areaId);
-                const input = area.querySelector('input[type="file"]');
-                const fileNameElement = area.querySelector('.file-name');
-                const uploadBtn = document.getElementById(areaId === 'plyUploadArea' ? 'uploadPLYBtn' : 'uploadPointCloudBtn');
-                const titleInput = document.getElementById(areaId === 'plyUploadArea' ? 'plyTitle' : 'pointCloudName');
-
-                area.addEventListener('click', () => input.click());
-
-                area.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    area.classList.add('dragover');
-                });
-
-                area.addEventListener('dragleave', () => {
-                    area.classList.remove('dragover');
-                });
-
-                area.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    area.classList.remove('dragover');
-                    handleFiles(e.dataTransfer.files);
-                });
-
-                input.addEventListener('change', (e) => {
-                    handleFiles(e.target.files);
-                });
-
-                function handleFiles(files) {
-                    if (files.length > 0) {
-                        const fileName = files[0].name;
-                        fileNameElement.textContent = fileName;
-                        fileNameElement.style.display = 'block';
-                        input.files = files;
-                    }
-                }
-
-                uploadBtn.addEventListener('click', () => {
-                    if (input.files.length === 0) {
-                        alert('Please select a file first.');
-                        return;
-                    }
-                    if (titleInput.value.trim() === '') {
-                        alert('Please enter a title for the file.');
-                        return;
-                    }
-                    uploadFile(input.files[0], titleInput.value, areaId === 'plyUploadArea' ? 'ply' : 'pointCloud');
-                });
-            });
-
-            async function uploadFile(file, title, type) {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('title', title);
-
-                try {
-                    let response;
-                    if (type === 'ply') {
-                        response = await axios.post('/api/upload', formData, {
-                            headers: { 'Content-Type': 'multipart/form-data' }
-                        });
-                    } else {
-                        response = await axios.post('/api/point_clouds', formData, {
-                            headers: { 'Content-Type': 'multipart/form-data' }
-                        });
-                    }
-                    alert('File uploaded successfully!');
-                    // Reset form and refresh list
-                    document.getElementById(type === 'ply' ? 'plyFile' : 'pointCloudFile').value = '';
-                    document.getElementById(type === 'ply' ? 'plyTitle' : 'pointCloudName').value = '';
-                    document.getElementById(type === 'ply' ? 'plyFileName' : 'pointCloudFileName').textContent = '';
-                    if (type === 'ply') {
-                        document.getElementById('refreshVideoListBtn').click();
-                    } else {
-                        document.getElementById('refreshPointCloudListBtn').click();
-                    }
-                } catch (error) {
-                    console.error('Error uploading file:', error);
-                    alert('Error uploading file. Please try again.');
-                }
-            }
         });
     </script>
 </body>

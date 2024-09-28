@@ -43,11 +43,11 @@ UPLOAD_FOLDER=/app/uploads
 
 | Endpoint | Method | Parameters | Response | Codes |
 |----------|--------|------------|----------|-------|
-| `/api/upload` | POST | `title`: Str (opt)<br>`file`: File | `message`, `video_id` | 200, 400 |
-| `/api/videos` | GET | - | Array of video objects | 200 |
-| `/api/videos/<id>` | GET | `id`: Str | Video object | 200, 404 |
-| `/api/videos/<id>` | DELETE | `id`: Str | `message` | 200, 404 |
-| `/api/preprocess/<id>` | POST | `id`: Str | Processed video data | 200, 404 |
+| `/api/upload` | POST | `title`: Str (opt)<br>`file`: File | `message`, `visual_data_id` | 200, 400 |
+| `/api/visual_datas` | GET | - | Array of visual_data objects | 200 |
+| `/api/visual_datas/<id>` | GET | `id`: Str | visual_data object | 200, 404 |
+| `/api/visual_datas/<id>` | DELETE | `id`: Str | `message` | 200, 404 |
+| `/api/preprocess/<id>` | POST | `id`: Str | Processed visual_data data | 200, 404 |
 | `/api/preprocess/progress/<id>` | GET | `id`: Str | Progress info | 200, 404 |
 | `/api/point_clouds` | POST | `name`: Str (opt)<br>`file`: File | `message`, `point_cloud_id` | 200, 400 |
 | `/api/point_clouds` | GET | - | Array of point cloud objects | 200 |
@@ -83,10 +83,10 @@ Dromo_Structure/
 │   │   ├── __init__.py
 │   │   ├── point_cloud.py
 │   │   ├── threed_model.py
-│   │   └── video.py
+│   │   └── visual_data.py
 │   ├── preprocess
 │   │   ├── ply_preprocess.py
-│   │   └── videos_to_frames.py
+│   │   └── visual_datas_to_frames.py
 │   ├── reconstruction
 │   │   ├── __init__.py
 │   │   ├── mesh_to_obj_converter.py
@@ -98,7 +98,7 @@ Dromo_Structure/
 │   │   ├── preprocess_service.py
 │   │   ├── recon_proc_visualization_service.py
 │   │   ├── reconstruction_service.py
-│   │   └── video_service.py
+│   │   └── visual_data_service.py
 │   └── static
 │       ├── index.html
 │       ├── css
@@ -112,7 +112,7 @@ Dromo_Structure/
 │           ├── NotificationSystem.js
 │           ├── PointCloudManager.js
 │           ├── ReconstructionProcess.js
-│           ├── VideoManager.js
+│           ├── VisualDataManager.js
 │           └── main.js
 ├── Dockerfile
 ├── README.md
@@ -163,7 +163,7 @@ Once in the MongoDB shell, type the following commands:
 ```
 use dromo
 show collections
-db.videos.find()
+db.visual_data.find()
 db.point_clouds.find()
 db.point_clouds.find({}, {name: 1, _id: 0})
 ```
