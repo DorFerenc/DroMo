@@ -283,6 +283,31 @@ def reconstruct(point_cloud_id):
         current_app.logger.error(f"Reconstruction error: {str(e)}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
+@api_bp.route('/api/reconstruction_stages/<point_cloud_id>', methods=['GET'])
+def get_reconstruction_stages(point_cloud_id):
+    """
+    Get the reconstruction stages for a given point cloud.
+
+    Args:
+        point_cloud_id: Point Cloud ID
+
+    Returns:
+        JSON response with reconstruction stages data.
+    """
+    current_app.logger.info(f"Received request for reconstruction stages of point cloud: {point_cloud_id}")
+    try:
+        stages = ReconstructionService.get_reconstruction_stages(point_cloud_id)
+        current_app.logger.info(f"Successfully retrieved reconstruction stages for point cloud: {point_cloud_id}")
+        return jsonify(stages), 200
+    except ValueError as e:
+        current_app.logger.error(f"Value error in reconstruction stages: {str(e)}")
+        return jsonify({"error": str(e), "point_cloud_id": point_cloud_id}), 404
+        # return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error in reconstruction stages: {str(e)}", exc_info=True)
+        return jsonify({"error": "Internal server error", "details": str(e), "point_cloud_id": point_cloud_id}), 500
+        # return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
 ########################################################################
 # 3D Model API
 ########################################################################
