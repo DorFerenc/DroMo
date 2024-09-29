@@ -5,6 +5,7 @@ import PointCloudManager from './PointCloudManager.js';
 import ModelManager from './ModelManager.js';
 import ReconstructionProcess from './ReconstructionProcess.js';
 import PointCloudProcessVisualization from './PointCloudProcessVisualization.js';
+import ReconstructionProcessVisualization from './ReconstructionProcessVisualization.js';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -14,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const visualDataManager = new VisualDataManager(apiService, notificationSystem);
     const processVisualization = new PointCloudProcessVisualization('point-cloud-process-container', apiService);
     const pointCloudManager = new PointCloudManager(apiService, notificationSystem, processVisualization);
-    const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
+    // const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
+    const reconstructionProcess = new ReconstructionProcessVisualization('reconstruction-process-container', apiService);
     const modelManager = new ModelManager(apiService, notificationSystem, reconstructionProcess);
 
     // Make manager instances globally accessible

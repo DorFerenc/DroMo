@@ -9,6 +9,7 @@ class ModelManager {
         this.modelList = document.getElementById('modelList');
         this.modelDetails = document.getElementById('modelDetails');
         this.activeModelId = null;
+        this.activePointCloudId = null;
         this.initEventListeners();
     }
 
@@ -87,7 +88,7 @@ class ModelManager {
         try {
 
             const modelDetails = await this.apiService.get(`/models/${id}`);
-            const { obj_file, mtl_file, texture_file } = modelDetails;
+            const { obj_file, mtl_file, texture_file, point_cloud_id } = modelDetails;
 
             const viewerContainer = document.getElementById('modelViewer');
             viewerContainer.innerHTML = '';
@@ -98,10 +99,17 @@ class ModelManager {
 
             // // Clear old visualization data in ReconstructionProcess
             // this.reconstructionProcess.clearVisualization();
+
             // Update the active model ID
             this.activeModelId = id;
+            this.activePointCloudId = point_cloud_id;
+
             // Trigger the reconstruction process visualization
-            this.reconstructionProcess.showProcess(id);
+            if (point_cloud_id) {
+                await this.reconstructionProcess.showProcess(point_cloud_id);
+            } else {
+                console.error('No point_cloud_id associated with this model');
+            }
 
             window.currentModelViewer = new ModelViewer('modelViewer');
             await window.currentModelViewer.loadModel(id, obj_file, mtl_file, texture_file);
@@ -121,10 +129,42 @@ class ModelManager {
         return this.activeModelId !== null;
     }
 
-    // restore the reconstruction process
+    // // restore the reconstruction process
+    // restoreReconstructionProcess() {
+    //     if (this.hasActiveReconstruction()) {
+    //         this.reconstructionProcess.showProcess(this.activeModelId);
+    //     }
+    // }
     restoreReconstructionProcess() {
-        if (this.hasActiveReconstruction()) {
-            this.reconstructionProcess.showProcess(this.activeModelId);
+        if (this.activePointCloudId) {
+            this.reconstructionProcess.showProcess(this.activePointCloudId);
+        } else if (this.activeModelId) {
+            console.warn('No active point cloud ID, but there is an active model ID. Fetching model details...');
+            this.getModelDetails(this.activeModelId)
+                .then(modelDetails => {
+                    if (modelDetails.point_cloud_id) {
+                        this.activePointCloudId = modelDetails.point_cloud_id;
+                        this.reconstructionProcess.showProcess(this.activePointCloudId);
+                    } else {
+                        console.error('No point cloud ID associated with the active model');
+                        this.notificationSystem.show('Error: No point cloud data available for the current model', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching model details:', error);
+                    this.notificationSystem.show('Error: Unable to restore reconstruction process', 'error');
+                });
+        } else {
+            console.warn('No active model or point cloud ID to restore reconstruction process');
+        }
+    }
+
+    async getModelDetails(modelId) {
+        try {
+            return await this.apiService.get(`/models/${modelId}`);
+        } catch (error) {
+            console.error('Error fetching model details:', error);
+            throw error;
         }
     }
 }
