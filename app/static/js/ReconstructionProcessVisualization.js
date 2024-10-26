@@ -58,6 +58,9 @@ class ReconstructionProcessVisualization {
 
         this.prevButton.addEventListener('click', () => this.prevStep());
         this.nextButton.addEventListener('click', () => this.nextStep());
+
+        // Add passive wheel event listener to the plot container
+        this.container.addEventListener('wheel', () => {}, { passive: true });
     }
 
     async showProcess(pointCloudId) {
@@ -94,26 +97,34 @@ class ReconstructionProcessVisualization {
         `;
     }
 
-    // async loadReconstructionStages(pointCloudId) {
-    //     try {
-    //         this.cachedData = await this.apiService.get(`/reconstruction_stages/${pointCloudId}`);
-    //     } catch (error) {
-    //         console.error('Error loading reconstruction stages:', error);
-    //     }
-    // }
-
     async loadReconstructionStages(pointCloudId) {
         try {
             this.cachedData = await this.apiService.get(`/reconstruction_stages/${pointCloudId}`);
         } catch (error) {
             console.error('Error loading reconstruction stages:', error);
-            if (error.response && error.response.status === 404) {
-                throw new Error(`Point cloud with ID ${pointCloudId} not found. Please check the model and try again.`);
-            } else {
-                throw new Error('Failed to load reconstruction stages. Please try again later.');
-            }
         }
     }
+
+    // updateStep(step) {
+    //     this.updateStepContent(step);
+    //     this.container.querySelector('.progress').style.width = `${(step + 1) * (100 / this.steps.length)}%`;
+
+    //     const plotElement = this.container.querySelector(`#plot-${step}`);
+    //     if (plotElement) {
+    //         Plotly.purge(plotElement);
+    //     }
+
+    //     if (this.cachedData) {
+    //         const stageData = this.cachedData[this.steps[step].dataKey];
+    //         if (stageData) {
+    //             this.createPlot(`plot-${step}`, this.convertDataToPlotlyFormat(stageData, step));
+    //         } else {
+    //             this.showLoadingIndicator(`plot-${step}`);
+    //         }
+    //     } else {
+    //         this.showLoadingIndicator(`plot-${step}`);
+    //     }
+    // }
 
     updateStep(step) {
         this.updateStepContent(step);
@@ -127,7 +138,9 @@ class ReconstructionProcessVisualization {
         if (this.cachedData) {
             const stageData = this.cachedData[this.steps[step].dataKey];
             if (stageData) {
-                this.createPlot(`plot-${step}`, this.convertDataToPlotlyFormat(stageData, step));
+                requestAnimationFrame(() => {
+                    this.createPlot(`plot-${step}`, this.convertDataToPlotlyFormat(stageData, step));
+                });
             } else {
                 this.showLoadingIndicator(`plot-${step}`);
             }
@@ -148,6 +161,22 @@ class ReconstructionProcessVisualization {
         `;
     }
 
+    // createPlot(elementId, data) {
+    //     const layout = {
+    //         scene: {
+    //             aspectmode: 'data',
+    //             xaxis: {title: 'X'},
+    //             yaxis: {title: 'Y'},
+    //             zaxis: {title: 'Z'},
+    //             camera: {
+    //                 eye: {x: 1.5, y: 1.5, z: 1.5}
+    //             }
+    //         },
+    //         margin: {l: 0, r: 0, t: 0, b: 0}
+    //     };
+    //     Plotly.newPlot(elementId, data, layout);
+    // }
+
     createPlot(elementId, data) {
         const layout = {
             scene: {
@@ -159,9 +188,15 @@ class ReconstructionProcessVisualization {
                     eye: {x: 1.5, y: 1.5, z: 1.5}
                 }
             },
-            margin: {l: 0, r: 0, t: 0, b: 0}
+            margin: {l: 0, r: 0, t: 0, b: 0},
+            autosize: true,
+            useResizeHandler: true
         };
-        Plotly.newPlot(elementId, data, layout);
+        const config = {
+            responsive: true,
+            displayModeBar: false
+        };
+        Plotly.newPlot(elementId, data, layout, config);
     }
 
     convertDataToPlotlyFormat(data, step) {
@@ -267,19 +302,39 @@ class ReconstructionProcessVisualization {
         `;
     }
 
+    // nextStep() {
+    //     if (this.currentStep < this.steps.length - 1) {
+    //         this.currentStep++;
+    //         this.updateStep(this.currentStep);
+    //         this.updateNavigation();
+    //     }
+    // }
+
+    // prevStep() {
+    //     if (this.currentStep > 0) {
+    //         this.currentStep--;
+    //         this.updateStep(this.currentStep);
+    //         this.updateNavigation();
+    //     }
+    // }
+
     nextStep() {
         if (this.currentStep < this.steps.length - 1) {
             this.currentStep++;
-            this.updateStep(this.currentStep);
-            this.updateNavigation();
+            requestAnimationFrame(() => {
+                this.updateStep(this.currentStep);
+                this.updateNavigation();
+            });
         }
     }
 
     prevStep() {
         if (this.currentStep > 0) {
             this.currentStep--;
-            this.updateStep(this.currentStep);
-            this.updateNavigation();
+            requestAnimationFrame(() => {
+                this.updateStep(this.currentStep);
+                this.updateNavigation();
+            });
         }
     }
 

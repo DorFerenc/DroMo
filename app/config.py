@@ -10,7 +10,8 @@ class Config:
     MONGO_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/dromo')
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
     ALLOWED_EXTENSIONS = {'ply'} # {'mp4', 'avi', 'mov', 'ply'}
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload size
+    # MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload size
+    MAX_CONTENT_LENGTH = 64 * 1024 * 1024  # 64 MB max upload size
     MODELS_FOLDER = '/app/outputs'
 
     # YOLO specific configurations

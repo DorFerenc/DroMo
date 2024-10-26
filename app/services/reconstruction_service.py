@@ -32,6 +32,7 @@ class ReconstructionService:
             # points = point_cloud['points']
             points = point_cloud.get('points')
             if not points:
+                ReconstructionService.logger.error("Point cloud has no points data")
                 raise ValueError("Point cloud has no points data")
 
             colors = point_cloud.get('colors')
@@ -39,6 +40,8 @@ class ReconstructionService:
             if colors is None:
                 ReconstructionService.logger.info("Generating colors for point cloud")
                 colors = generate_colors(points, method='height')
+
+            ReconstructionService.logger.info(f"Point cloud has {len(points)} points and {len(colors)} color values")
 
             # Convert point cloud to mesh
             ReconstructionService.logger.info("Converting point cloud to mesh")
