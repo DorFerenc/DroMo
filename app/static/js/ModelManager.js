@@ -85,6 +85,7 @@ class ModelManager {
     }
 
     async visualizeModel(id) {
+        this.notificationSystem.show('Start visualize please wait', 'info');
         try {
 
             const modelDetails = await this.apiService.get(`/models/${id}`);
@@ -156,15 +157,6 @@ class ModelManager {
                 });
         } else {
             console.warn('No active model or point cloud ID to restore reconstruction process');
-        }
-    }
-
-    async getModelDetails(modelId) {
-        try {
-            return await this.apiService.get(`/models/${modelId}`);
-        } catch (error) {
-            console.error('Error fetching model details:', error);
-            throw error;
         }
     }
 }

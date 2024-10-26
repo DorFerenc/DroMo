@@ -531,3 +531,7 @@ outputs/
 
 app/points/*
 app/points/
+
+app/*.ply
+/app/*.ply
+*.ply

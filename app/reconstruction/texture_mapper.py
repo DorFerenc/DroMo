@@ -99,12 +99,24 @@ class TextureMapper:
         if self.mesh is None or self.point_cloud is None or self.colors is None:
             raise ValueError("Mesh and point cloud with colors must be loaded before mapping.")
         try:
+              # Check if point cloud and colors are not empty
+            if len(self.point_cloud) == 0 or len(self.colors) == 0:
+                raise ValueError("Point cloud or colors array is empty")
+
             tree = cKDTree(self.point_cloud)
             distances, indices = tree.query(self.mesh.points)
+
+            # Check if any valid indices were found
+            if len(indices) == 0:
+                raise ValueError("No valid nearest neighbors found for mesh points")
+
+            # Ensure indices are integers and within bounds
+            indices = np.clip(indices, 0, len(self.colors) - 1).astype(int)
+
             vertex_colors = self.colors[indices]
 
-            # Ensure indices are integers
-            indices = indices.astype(int)
+            # # Ensure indices are integers
+            # indices = indices.astype(int)
 
             # Ensure colors are in the range [0, 1]
             if vertex_colors.max() > 1.0:
