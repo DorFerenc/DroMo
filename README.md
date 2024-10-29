@@ -47,14 +47,17 @@ UPLOAD_FOLDER=/app/uploads
 | `/api/visual_datas` | GET | - | Array of visual_data objects | 200 |
 | `/api/visual_datas/<id>` | GET | `id`: Str | visual_data object | 200, 404 |
 | `/api/visual_datas/<id>` | DELETE | `id`: Str | `message` | 200, 404 |
-| `/api/preprocess/<id>` | POST | `id`: Str | Processed visual_data data | 200, 404 |
-| `/api/preprocess/progress/<id>` | GET | `id`: Str | Progress info | 200, 404 |
+| `/api/preprocess/<id>` | POST | `id`: Str | `task_id`, `status` | 202, 404 |
+| `/api/preprocess/status/<task_id>` | GET | `task_id`: Str | Task status object | 200, 404 |
+| `/api/preprocess/cleanup` | POST | - | `status` | 200 |
+| `/api/preprocess/<param>/<ply_id>` | GET | `param`: Str<br>`ply_id`: Str | PLY data | 200, 404 |
 | `/api/point_clouds` | POST | `name`: Str (opt)<br>`file`: File | `message`, `point_cloud_id` | 200, 400 |
 | `/api/point_clouds` | GET | - | Array of point cloud objects | 200 |
 | `/api/point_clouds/<id>` | GET | `id`: Str | Point cloud object | 200, 400, 404 |
 | `/api/point_clouds/<id>` | DELETE | `id`: Str | `message` | 200, 400, 404 |
 | `/api/point_clouds/<id>/download` | GET | `id`: Str | CSV file | 200, 404, 500 |
 | `/api/reconstruct/<id>` | POST | `id`: Str | `message`, `model_id` | 200, 404, 500 |
+| `/api/reconstruction_stages/<id>` | GET | `id`: Str | Reconstruction stages data | 200, 404, 500 |
 | `/api/models` | GET | - | Array of 3D model objects | 200 |
 | `/api/models/<id>` | GET | `id`: Str | 3D model object | 200, 404 |
 | `/api/models/<id>` | DELETE | `id`: Str | `message` | 200, 404, 500 |
@@ -75,7 +78,8 @@ Dromo_Structure/
 │   ├── config.py
 │   ├── api
 │   │   ├── __init__.py
-│   │   └── routes.py
+│   │   ├── routes.py
+│   │   └── task_manager.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   └── mongodb.py
@@ -84,9 +88,14 @@ Dromo_Structure/
 │   │   ├── point_cloud.py
 │   │   ├── threed_model.py
 │   │   └── visual_data.py
+│   ├── ply_preprocess_visuals
+│   │   ├── bottom_surface_ply
+│   │   ├── complete_object_ply
+│   │   ├── filtered_ply
+│   │   └── removed_background_ply
 │   ├── preprocess
 │   │   ├── ply_preprocess.py
-│   │   └── visual_datas_to_frames.py
+│   │   └── videos_to_frames.py
 │   ├── reconstruction
 │   │   ├── __init__.py
 │   │   ├── mesh_to_obj_converter.py
@@ -101,6 +110,7 @@ Dromo_Structure/
 │   │   └── visual_data_service.py
 │   └── static
 │       ├── index.html
+│       ├── dromo-favicon.svg
 │       ├── css
 │       │   ├── reconstruction-process.css
 │       │   └── styles.css
@@ -111,7 +121,9 @@ Dromo_Structure/
 │           ├── ModelViewer.js
 │           ├── NotificationSystem.js
 │           ├── PointCloudManager.js
+│           ├── PointCloudProcessVisualization.js
 │           ├── ReconstructionProcess.js
+│           ├── ReconstructionProcessVisualization.js
 │           ├── VisualDataManager.js
 │           └── main.js
 ├── Dockerfile
@@ -124,13 +136,14 @@ Dromo_Structure/
 │   ├── __init__.py
 │   ├── ply
 │   │   └── input.ply
-│   ├── test_api.py
-│   ├── test_point_cloud.py
-│   ├── test_preprocess.py
+│   ├── test_point_cloud_model_api.py
+│   ├── test_preprocess_api.py
+│   ├── test_preprocess_service.py
 │   ├── test_recon_proc_visualization_service.py
 │   ├── test_reconstruction_api.py
 │   ├── test_reconstruction_service.py
 │   ├── test_threed_model_api.py
+│   ├── test_visual_data_api.py
 │   └── test_visualization_api.py
 └── uploads
     └── test_ply.ply
