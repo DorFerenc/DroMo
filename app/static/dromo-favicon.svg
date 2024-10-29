@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Isometric cube -->
+  <path d="M16 4L4 12L16 20L28 12L16 4Z" fill="#4A90E2"/>
+  <path d="M4 12L4 20L16 28L16 20L4 12Z" fill="#357ABD"/>
+  <path d="M16 20L16 28L28 20L28 12L16 20Z" fill="#2C639B"/>
+</svg>
