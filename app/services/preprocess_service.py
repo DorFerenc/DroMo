@@ -80,20 +80,11 @@ class PreprocessService:
         point_cloud_id = ply_processor.save_to_db(name=ply_file['title'])
         filtered_pcd = ply_processor.voxel_downsample(filtered_pcd, voxel_size=0.005)
 
-        #ply_processor.save_ply_file_system(pcd, title="original_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(filtered_pcd, title="filtered_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(main_object, title="removed_background_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(bottom, title="bottom_surface_ply", id=point_cloud_id)
         ply_processor.save_ply_file_system(complete_object, title="complete_object_ply", id=point_cloud_id)
 
-        # # Update the PLY document with processing information
-        # db.ply_files.update_one(
-        #     {'_id': ObjectId(ply_id)},
-        #     {'$set': {
-        #         'processed': True,
-        #         'point_cloud_id': point_cloud_id,
-        #     }}
-        # )
 
         return {
             'ply_id': ply_id,
@@ -132,3 +123,46 @@ class PreprocessService:
         if ply is not None:
             ply = temp_PLY_Processor.format_point_cloud_to_serializable(ply)
         return ply
+
+    def delete_ply_files(self,point_cloud_id):
+        """
+        Delete all PLY files associated with a point cloud ID.
+
+        Args:
+            point_cloud_id (str): The ID of the point cloud
+
+        Returns:
+            dict: Dictionary containing lists of deleted and failed deletions
+        """
+        base_dir = "/app/app/ply_preprocess_visuals"
+        folders_to_check = [
+            "filtered_ply",
+            "removed_background_ply",
+            "bottom_surface_ply",
+            "complete_object_ply"
+        ]
+
+        deleted_files = []
+        failed_deletions = []
+
+        for folder in folders_to_check:
+            folder_path = os.path.join(base_dir, folder)
+            file_path = os.path.join(folder_path, f"{point_cloud_id}.ply")
+
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    deleted_files.append(file_path)
+
+                    # Try to remove the folder if it's empty
+                    if os.path.exists(folder_path) and not os.listdir(folder_path):
+                        os.rmdir(folder_path)
+                        print(f"Removed empty directory: {folder_path}")
+            except Exception as e:
+                print.error(f"Error deleting {file_path}: {str(e)}")
+                failed_deletions.append(file_path)
+
+        return {
+            'deleted_files': deleted_files,
+            'failed_deletions': failed_deletions
+        }

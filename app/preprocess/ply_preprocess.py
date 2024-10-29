@@ -108,7 +108,6 @@ class PLYProcessor:
         z_min = np.min(points[:, 1])  # Min z value (ground level)
         z_max = np.max(points[:, 1])  # Max z value (top of the object)
         object_height = z_max - z_min
-        print(object_height)
         min_height = 0.03
         max_height = 0.2
         distance_threshold = np.interp(object_height, [min_height, max_height], [0.006, 0.03])
@@ -191,50 +190,118 @@ class PLYProcessor:
 
         return bottom_surface_pcd
 
-    def save_to_db(self, name='point_cloud'):
+    def calculate_bson_size(self, points, colors):
         """
-        Save the main object from the PLY file into MongoDB and write it to a CSV file.
+        Estimate BSON document size for points and colors arrays.
+
+        Args:
+            points: numpy array of points
+            colors: numpy array of colors
+
+        Returns:
+            int: Estimated size in bytes
+        """
+        # Estimate size of points array (each point has 3 float64 values)
+        points_size = len(points) * 3 * 8  # 8 bytes per float64
+
+        # Estimate size of colors array (each color has 3 uint8 values)
+        colors_size = len(colors) * 3
+
+        # Add overhead for BSON structure (approximate)
+        overhead = 1000  # Base document overhead
+
+        return (points_size + colors_size + overhead)*5
+
+    def save_to_db(self, name='point_cloud', max_size_bytes=16 * 1024 * 1024):
+        """
+        Save the main object from the PLY file into MongoDB with automatic downsampling if needed.
+
+        Args:
+            name: Name for the point cloud
+            max_size_bytes: Maximum allowed BSON document size (default: 16MB)
+
+        Returns:
+            str: ID of saved point cloud
         """
         if self.main_object is None:
             raise ValueError("Main object not processed yet. Run `remove_background()` first.")
 
         # Convert point cloud to numpy arrays
-        points = np.asarray(self.main_object.points)  # Shape (N, 3)
-        colors = np.asarray(self.main_object.colors)  # Shape (N, 3)
+        points = np.asarray(self.main_object.points)
+        colors = np.asarray(self.main_object.colors)
 
         if len(colors) == 0:
             logging.warning("No colors found in the main object. Defaulting to black color.")
-            colors = np.zeros((len(points), 3))  # Initialize with zeros
-            colors[:, 1] = 1  # Set green channel to 1 for green color
+            colors = np.zeros((len(points), 3))
+            colors[:, 1] = 1  # Set green channel to 1
 
         # Scale color values from [0, 1] to [0, 255]
         colors = (colors * 255).astype(np.uint8)
 
-        # Convert the points_3d array to a list of dictionaries
+        # Initial size check
+        current_size = self.calculate_bson_size(points, colors)
+        print(f"point cloud size: {current_size / (1024 * 1024):.2f} MB")
+
+        # If size is too large, progressively downsample until it fits
+        current_pcd = self.main_object
+        voxel_size = 0.002  # Start with small voxel size
+
+        while current_size > max_size_bytes:
+
+
+            # Downsample with current voxel size
+            current_pcd = self.voxel_downsample(current_pcd, voxel_size)
+
+            # Update arrays
+            points = np.asarray(current_pcd.points)
+            colors = np.asarray(current_pcd.colors)
+            if len(colors) == 0:
+                colors = np.zeros((len(points), 3))
+                colors[:, 1] = 1
+
+            colors = (colors * 255).astype(np.uint8)
+
+            # Recalculate size
+            current_size = self.calculate_bson_size(points, colors)
+
+            # Increase voxel size for next iteration if needed
+            voxel_size *= 1.5
+
+        # Convert the points and colors to the correct format
         formatted_points = np.array([[float(p[0]), float(p[1]), float(p[2])] for p in points])
         formatted_colors = np.array([[float(p[0]), float(p[1]), float(p[2])] for p in colors])
-        print(f"3D reconstruction complete. {len(formatted_points)}  {len(formatted_colors)}")
 
         # Save PointCloud
         point_cloud = PointCloud(name, formatted_points, formatted_colors)
         point_cloud_id = point_cloud.save()
-        print(f"3D reconstruction complete. {len(formatted_points)} points saved to the database with ID {point_cloud_id}.")
+
+        print(
+            f"Successfully saved {len(formatted_points)} points to database with ID {point_cloud_id}. "
+            f"Final size: {current_size / (1024 * 1024):.2f} MB"
+        )
+
         return point_cloud_id
 
-    def save_ply_file_system(self, main_object, title, id=None):
+
+
+    def save_ply_file_system(self, main_object, title, id=None, max_size_mb=12):
         """
-        Save a PLY file to the file system in the ply_preprocess folder inside a folder named with the given id.
+        Save a PLY file to the file system with automatic downsampling if the file size exceeds the limit.
 
         Args:
-        main_object (open3d.geometry.PointCloud): The 3D object to be saved as PLY.
-        title (str): The title of the PLY file.
-        id (str): The identifier for the folder where the PLY file will be saved.
+            main_object (open3d.geometry.PointCloud): The 3D object to be saved as PLY.
+            title (str): The title of the PLY file.
+            id (str): The identifier for the folder where the PLY file will be saved.
+            max_size_mb (float): Maximum allowed file size in megabytes (default: 12MB)
 
         Returns:
-        str: The full path of the saved PLY file.
+            str: The full path of the saved PLY file.
         """
         if id is None:
             raise ValueError("An ID must be provided to save the PLY file.")
+
+        if not isinstance(main_object, o3d.geometry.PointCloud):
+            raise TypeError("main_object must be an Open3D PointCloud")
 
         # Define the base directory and create it if it doesn't exist
         base_dir = "/app/app/ply_preprocess_visuals"
@@ -248,22 +315,78 @@ class PLYProcessor:
         file_name = f"{str(id)}.ply"
         file_path = os.path.join(ply_dir, file_name)
 
-        # Save the PLY file
-        try:
-            # Ensure the main_object is a PointCloud
-            if not isinstance(main_object, o3d.geometry.PointCloud):
-                raise TypeError("main_object must be an Open3D PointCloud")
+        def get_file_size_mb(filepath):
+            """Get file size in megabytes"""
+            return os.path.getsize(filepath) / (1024 * 1024)
 
-            success = o3d.io.write_point_cloud(file_path, main_object)
+        def save_and_check_size(pcd, filepath):
+            """Save point cloud and return file size in MB"""
+            success = o3d.io.write_point_cloud(filepath, pcd)
             if not success:
                 raise IOError("Failed to write point cloud")
+            return get_file_size_mb(filepath)
 
-            print(f"PLY file saved successfully at: {file_path}")
+        def copy_point_cloud(pcd):
+            """Create a deep copy of an Open3D point cloud"""
+            new_pcd = o3d.geometry.PointCloud()
+            new_pcd.points = o3d.utility.Vector3dVector(np.asarray(pcd.points))
+            if hasattr(pcd, 'colors') and pcd.colors:
+                new_pcd.colors = o3d.utility.Vector3dVector(np.asarray(pcd.colors))
+            if hasattr(pcd, 'normals') and pcd.normals:
+                new_pcd.normals = o3d.utility.Vector3dVector(np.asarray(pcd.normals))
+            return new_pcd
+
+        try:
+            # Initial save attempt
+            current_pcd = copy_point_cloud(main_object)
+            current_size = save_and_check_size(current_pcd, file_path)
+            initial_points = len(current_pcd.points)
+
+            logging.info(f"Initial PLY file size: {current_size:.2f}MB with {initial_points} points")
+
+            # If size is too large, progressively downsample until it fits
+            voxel_size = 0.002  # Start with small voxel size
+            while current_size > max_size_mb:
+
+                # Remove existing oversized file
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+                # Downsample with current voxel size
+                current_pcd = current_pcd.voxel_down_sample(voxel_size)
+
+                # Save and check new size
+                current_size = save_and_check_size(current_pcd, file_path)
+
+                # Increase voxel size for next iteration if needed
+                voxel_size *= 1.5
+
+            # Calculate reduction statistics
+            final_points = len(current_pcd.points)
+            reduction_percent = ((initial_points - final_points) / initial_points) * 100 if initial_points > 0 else 0
+
+            logging.info(
+                f"PLY file saved successfully at: {file_path}\n"
+                f"Final size: {current_size:.2f}MB\n"
+                f"Points reduced: {initial_points:,} → {final_points:,} "
+                f"({reduction_percent:.1f}% reduction)"
+            )
+
+            # Return filepath only if save was successful
+            return file_path
+
         except Exception as e:
-            print(f"Error saving PLY file: {str(e)}")
+            logging.error(f"Error saving PLY file: {str(e)}")
+            # Clean up any partially written file
+            if os.path.exists(file_path):
+                os.remove(file_path)
             return None
 
-        return file_path
+
+
+
+
+
 
     def numpy_to_python(self, obj):
         if isinstance(obj, np.integer):
@@ -293,7 +416,6 @@ class PLYProcessor:
         # Convert the points_3d array to a list of dictionaries
         formatted_points = np.array([[float(p[0]), float(p[1]), float(p[2])] for p in points])
         formatted_colors = np.array([[float(p[0]), float(p[1]), float(p[2])] for p in colors])
-        print(f"3D reconstruction complete. {len(formatted_points)}  {len(formatted_colors)}")
 
         # Save PointCloud
         point_cloud = PointCloud("format", formatted_points, formatted_colors)

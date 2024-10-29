@@ -148,19 +148,91 @@ class VisualDataManager {
         }
     }
 
+//    async preprocessVisualData(id) {
+//        try {
+//            const response = await this.apiService.post(`/preprocess/${id}`);
+//            if (response && response.status) {
+//                this.notificationSystem.show(`Preprocessing Completed. Status: ${response.status}`, 'success');
+//            } else {
+//                this.notificationSystem.show('Preprocessing Completed', 'success');
+//            }
+//        } catch (error) {
+//            this.notificationSystem.show('Error preprocessing visual_data: ' + error.message, 'error');
+//        }
+//    }
+//----------------------------------------------------
+
     async preprocessVisualData(id) {
         try {
+            // Initiate processing
             const response = await this.apiService.post(`/preprocess/${id}`);
-            if (response && response.status) {
-                this.notificationSystem.show(`Preprocessing Completed. Status: ${response.status}`, 'success');
-            } else {
-                this.notificationSystem.show('Preprocessing Completed', 'success');
+            if (!response || !response.task_id) {
+                throw new Error('Invalid response from server');
             }
+
+            // Start polling for status
+            this.notificationSystem.show('Processing started...', 'info');
+            await this.pollProcessingStatus(response.task_id);
+
         } catch (error) {
-            this.notificationSystem.show('Error preprocessing visual_data: ' + error.message, 'error');
+            this.notificationSystem.show(
+                'Error preprocessing visual_data: ' + error.message,
+                'error'
+            );
         }
     }
 
+    async pollProcessingStatus(taskId) {
+        const maxAttempts = 100; // Adjust based on your needs
+        const interval = 3000;  // Poll every 3 seconds
+        let attempts = 0;
+
+        return new Promise((resolve, reject) => {
+            const checkStatus = async () => {
+                try {
+                    const statusResponse = await this.apiService.get(
+                        `/preprocess/status/${taskId}`
+                    );
+
+                    switch (statusResponse.status) {
+                        case 'SUCCESS':
+                            this.notificationSystem.show(
+                                'Processing completed successfully',
+                                'success'
+                            );
+                            resolve(statusResponse.result);
+                            break;
+
+                        case 'ERROR':
+                            throw new Error(
+                                statusResponse.error || 'Processing failed'
+                            );
+
+                        case 'PENDING':
+                        case 'PROCESSING':
+                            if (attempts >= maxAttempts) {
+                                throw new Error('Processing timeout');
+                            }
+                            attempts++;
+                            setTimeout(checkStatus, interval);
+                            break;
+
+                        default:
+                            throw new Error('Unknown processing status');
+                    }
+                } catch (error) {
+                    this.notificationSystem.show(
+                        'Error: ' + error.message,
+                        'error'
+                    );
+                    reject(error);
+                }
+            };
+
+            checkStatus();
+        });
+    }
+//----------------------------------------------------
     async deleteVisualData(id) {
         if (confirm('Are you sure you want to delete this visual_data?')) {
             try {

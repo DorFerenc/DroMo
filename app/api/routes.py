@@ -1,5 +1,8 @@
 """API routes for the DROMO system."""
 import logging
+import uuid
+from datetime import datetime
+from threading import Thread
 
 from flask import Blueprint, request, jsonify, current_app, send_file, abort, Response
 from werkzeug.utils import secure_filename
@@ -15,6 +18,7 @@ from app.services.preprocess_service import PreprocessService
 from app.services.recon_proc_visualization_service import ReconProcVisualizationService
 from app.models.point_cloud import PointCloud
 from app.models.threed_model import ThreeDModel
+from app.api.task_manager import TaskManager
 
 api_bp = Blueprint('api', __name__)
 
@@ -23,7 +27,6 @@ visual_data_service = VisualDataService()
 preprocess_service = PreprocessService()
 reconstruction_service = ReconstructionService()
 visualization_service = ReconProcVisualizationService()
-
 # Helper functions
 def allowed_file(filename):
     """Check if the file extension is allowed."""
@@ -44,6 +47,17 @@ def handle_exception(e):
     """Global exception handler for the API."""
     current_app.logger.error(f"An error occurred: {str(e)}", exc_info=True)
     return jsonify({"error": "An internal error occurred"}), 500
+
+def process_in_background(task_id: str, visual_data_id: str):
+    try:
+        TaskManager.update_task_status(task_id, 'PROCESSING')
+
+        # Your existing processing logic here
+        result = preprocess_service.process_ply(visual_data_id)
+
+        TaskManager.update_task_status(task_id, 'SUCCESS', result=result)
+    except Exception as e:
+        TaskManager.update_task_status(task_id, 'ERROR', error=str(e))
 
 ##################################################
 # Upload visual data API
@@ -123,29 +137,68 @@ def delete_visual_data(visual_data_id):
 # Pre Process api
 ########################################################################
 
+
 @api_bp.route('/api/preprocess/<visual_data_id>', methods=['POST'])
 def process_visual_data(visual_data_id):
     """
-        PreProcess the visual_data
-        Args:
-            visual_data_id (str): The id of the visual_data to preprocess.
-        Returns:
-            dict: The processed visual_data data if found, None otherwise.
-        """
-    result = preprocess_service.process_ply(visual_data_id)
-    if result:
-        return jsonify(result), 200
-    else:
-        return jsonify({'error': 'visual_data not found or invalid ID'}), 404
+    Start asynchronous preprocessing of visual_data
+    """
 
-@api_bp.route('/api/preprocess/progress/<visual_data_id>', methods=['GET'])
-def progress_process_visual_data(visual_data_id):
-    """PreProcess the visual_data"""
-    result = preprocess_service.get_progress(visual_data_id)
-    if result:
-        return jsonify(result), 200
-    else:
-        return jsonify({'error': 'visual_data not found or invalid ID'}), 404
+    ply_file = VisualDataService.get_visual_data(visual_data_id)
+
+    if not ply_file:
+        return jsonify({
+        'id': visual_data_id,
+        'status': 'NOT FOUND',
+        'error': 'visual_data not found or invalid ID'
+    }), 404
+
+    # Create a new task
+    task_id = TaskManager.create_task(visual_data_id)
+
+    # Start processing in background
+    thread = Thread(target=process_in_background, args=(task_id, visual_data_id))
+    thread.daemon = True  # Thread will be terminated when main process exits
+    thread.start()
+
+    return jsonify({
+        'task_id': task_id,
+        'status': 'PENDING'
+    }), 202
+
+
+@api_bp.route('/api/preprocess/status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    """
+    Get the status of a processing task
+    """
+    task = TaskManager.get_task_status(task_id)
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
+
+    response = {
+        'task_id': task_id,
+        'status': task['status'],
+        'start_time': task['start_time'].isoformat(),
+        'end_time': task['end_time'].isoformat() if task['end_time'] else None
+    }
+
+    if task['status'] == 'SUCCESS':
+        response['result'] = task['result']
+    elif task['status'] == 'ERROR':
+        response['error'] = task['error']
+
+    return jsonify(response)
+
+
+# Add task cleanup route (optional)
+@api_bp.route('/api/preprocess/cleanup', methods=['POST'])
+def cleanup_tasks():
+    """
+    Clean up completed tasks older than 24 hours
+    """
+    TaskManager.clean_old_tasks()
+    return jsonify({'status': 'success'})
 
 ########################################################################
 # Point cloud api
@@ -220,6 +273,7 @@ def delete_point_cloud(point_cloud_id):
     """Delete a specific point cloud."""
     db = get_db()
     try:
+        preprocess_service.delete_ply_files(point_cloud_id)
         result = db.point_clouds.delete_one({'_id': ObjectId(point_cloud_id)})
         if result.deleted_count:
             return jsonify({'message': 'Point cloud deleted successfully'}), 200
