@@ -6,10 +6,11 @@ import ModelManager from './ModelManager.js';
 import ReconstructionProcess from './ReconstructionProcess.js';
 import PointCloudProcessVisualization from './PointCloudProcessVisualization.js';
 import ReconstructionProcessVisualization from './ReconstructionProcessVisualization.js';
+import AboutUs from './AboutUs.js';
 
 const API_URL = 'http://localhost:5000/api';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const apiService = new ApiService(API_URL);
     const notificationSystem = new NotificationSystem();
     const visualDataManager = new VisualDataManager(apiService, notificationSystem);
@@ -18,6 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // const reconstructionProcess = new ReconstructionProcess('reconstruction-process-container', apiService);
     const reconstructionProcess = new ReconstructionProcessVisualization('reconstruction-process-container', apiService);
     const modelManager = new ModelManager(apiService, notificationSystem, reconstructionProcess);
+    const aboutUsRoot = document.getElementById('about-us-root');
+    if (aboutUsRoot) {
+        const { createElement } = await import('react');
+        const { createRoot } = await import('react-dom/client');
+        const root = createRoot(aboutUsRoot);
+        root.render(createElement(AboutUs));
+    }
 
     // Make manager instances globally accessible
     window.visualDataManager = visualDataManager;
