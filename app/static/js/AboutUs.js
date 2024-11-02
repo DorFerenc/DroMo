@@ -557,72 +557,114 @@ const Presentation = () => {
           }, "Each step is optimized for efficient processing while maintaining high-quality output")
         ])
       },
-  {
-    title: "Processing Pipeline - Reconstruction",
-    icon: createIcon(Lucide.Boxes),
-    content: React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '16px'
-      }
-    }, [
-      React.createElement("div", {
-        key: "reconstruction-steps",
-        style: {
-          padding: '16px',
-          backgroundColor: '#eff6ff',
-          borderRadius: '12px'
-        }
-      }, [
-        React.createElement("h3", {
+      {
+        title: "Pipeline - Reconstruction",
+        icon: createIcon(Lucide.Boxes),
+        content: React.createElement("div", {
           style: {
-            fontSize: '1.25rem',
-            fontWeight: 'bold',
-            color: '#1d4ed8',
-            marginBottom: '12px'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px'
           }
-        }, "Reconstruction Process"),
-        React.createElement("div", {
-          style: { display: 'flex', flexDirection: 'column', gap: '8px' }
         }, [
-          createListItem("1. Alpha value optimization", "rec1"),
-          createListItem("2. Delaunay triangulation", "rec2"),
-          createListItem("3. Sealed surface mesh extraction", "rec3"),
-          createListItem("4. Mesh cleaning and optimization", "rec4"),
-          createListItem("5. UV mapping", "rec5"),
-          createListItem("6. Texture application", "rec6"),
-          createListItem("7. Final model generation", "rec7")
+          React.createElement("div", {
+            key: "core-process",
+            style: {
+              padding: '16px',
+              backgroundColor: '#eff6ff',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#1d4ed8',
+                marginBottom: '12px'
+              }
+            }, "Core Process"),
+            React.createElement("div", {
+              style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+            }, [
+              createListItem("Alpha value optimization for mesh quality", "core1", '#3b82f6'),
+              createListItem("Delaunay triangulation for initial mesh", "core2", '#3b82f6'),
+              createListItem("Surface extraction and cleanup", "core3", '#3b82f6')
+            ])
+          ]),
+          React.createElement("div", {
+            key: "mesh-refinement",
+            style: {
+              padding: '16px',
+              backgroundColor: '#faf5ff',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#7e22ce',
+                marginBottom: '12px'
+              }
+            }, "Mesh Refinement"),
+            React.createElement("div", {
+              style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+            }, [
+              createListItem("Remove degenerate triangles", "refine1", '#7e22ce'),
+              createListItem("Fill holes and ensure watertight mesh", "refine2", '#7e22ce'),
+              createListItem("Smooth mesh surface while preserving features", "refine3", '#7e22ce')
+            ])
+          ]),
+          React.createElement("div", {
+            key: "texture-processing",
+            style: {
+              padding: '16px',
+              backgroundColor: '#f0fdf4',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#15803d',
+                marginBottom: '12px'
+              }
+            }, "Texture Processing"),
+            React.createElement("div", {
+              style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+            }, [
+              createListItem("Smart UV mapping (planar/cylindrical/spherical)", "texture1", '#15803d'),
+              createListItem("Color mapping from point cloud", "texture2", '#15803d'),
+              createListItem("Texture generation and smoothing", "texture3", '#15803d')
+            ])
+          ]),
+          React.createElement("div", {
+            key: "output-generation",
+            style: {
+              padding: '16px',
+              backgroundColor: '#ffedd5',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#d97706',
+                marginBottom: '12px'
+              }
+            }, "Output Generation"),
+            React.createElement("div", {
+              style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+            }, [
+              createListItem("OBJ file with proper vertex data", "output1", '#d97706'),
+              createListItem("MTL file with material properties", "output2", '#d97706'),
+              createListItem("High-quality texture maps", "output3", '#d97706')
+            ])
+          ])
         ])
-      ]),
-      React.createElement("div", {
-        key: "output",
-        style: {
-          padding: '16px',
-          backgroundColor: '#f0fdf4',
-          borderRadius: '12px'
-        }
-      }, [
-        React.createElement("h3", {
-          style: {
-            fontSize: '1.25rem',
-            fontWeight: 'bold',
-            color: '#15803d',
-            marginBottom: '12px'
-          }
-        }, "Output Specifications"),
-        React.createElement("div", {
-          style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-        }, [
-          createListItem("Industry-standard OBJ format", "out1"),
-          createListItem("High-quality texture maps", "out2"),
-          createListItem("Optimized mesh topology", "out3"),
-          createListItem("Proper UV unwrapping", "out4"),
-          createListItem("Ready for 3D applications", "out5")
-        ])
-      ])
-    ])
-  },
+      },
 
   {
     title: "Test Results",
