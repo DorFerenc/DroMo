@@ -165,7 +165,6 @@ const Presentation = () => {
             }
           }, [
             React.createElement("img", {
-            //   src: "/js/achi.png/1200/600",
               src: "../achi.png",
               alt: "System Architecture Diagram",
               style: {
@@ -301,6 +300,7 @@ const Presentation = () => {
         ])
       ])
     },
+
     {
         title: "Processing Pipeline",
         icon: createIcon(Lucide.GitBranch),
@@ -308,14 +308,15 @@ const Presentation = () => {
           style: {
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            gap: '12px'
           }
         }, [
+          // Pipeline Overview Content
           React.createElement("div", {
             style: {
-              padding: '20px',
+              padding: '10px',
               backgroundColor: '#f8fafc',
-              borderRadius: '12px',
+              borderRadius: '6px',
               textAlign: 'center'
             }
           }, [
@@ -334,76 +335,113 @@ const Presentation = () => {
                 alignItems: 'center',
                 padding: '0 32px'
               }
-            },
-              [
-                {
-                  title: "Input",
-                  desc: "LIDAR scan (.ply format)"
-                },
-                {
-                  title: "Preprocessing",
-                  desc: "Point cloud optimization"
-                },
-                {
-                  title: "Reconstruction",
-                  desc: "Mesh generation"
-                },
-                {
-                  title: "Output",
-                  desc: "OBJ model with textures"
-                }
-              ].map((item, idx, arr) => (
-                React.createElement(React.Fragment, { key: `stage-group-${idx}` }, [
+            }, [
+              {
+                title: "Input",
+                desc: "LIDAR scan (.ply format)"
+              },
+              {
+                title: "Preprocessing",
+                desc: "Point cloud optimization"
+              },
+              {
+                title: "Reconstruction",
+                desc: "Mesh generation"
+              },
+              {
+                title: "Output",
+                desc: "OBJ model with textures"
+              }
+            ].map((item, idx, arr) => (
+              React.createElement(React.Fragment, { key: `stage-group-${idx}` }, [
+                React.createElement("div", {
+                  style: {
+                    textAlign: 'center'
+                  }
+                }, [
                   React.createElement("div", {
                     style: {
-                      textAlign: 'center'
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      backgroundColor: '#3b82f6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto',
+                      marginBottom: '8px'
                     }
-                  }, [
-                    React.createElement("div", {
+                  },
+                    React.createElement("span", {
                       style: {
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '50%',
-                        backgroundColor: '#3b82f6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto',
-                        marginBottom: '8px'
+                        color: 'white',
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold'
                       }
-                    },
-                      React.createElement("span", {
-                        style: {
-                          color: 'white',
-                          fontSize: '1.5rem',
-                          fontWeight: 'bold'
-                        }
-                      }, idx + 1)
-                    ),
-                    React.createElement("h4", {
-                      style: {
-                        fontSize: '1.125rem',
-                        fontWeight: 'bold',
-                        color: '#1f2937',
-                        marginBottom: '4px'
-                      }
-                    }, item.title),
-                    React.createElement("p", {
-                      style: {
-                        color: '#4b5563',
-                        fontSize: '0.875rem'
-                      }
-                    }, item.desc)
-                  ]),
-                  idx < arr.length - 1 &&
-                    React.createElement(Lucide.ArrowRight, {
-                      key: `arrow-${idx}`,
-                      size: 24,
-                      color: '#9ca3af'
-                    })
-                ])
-              ))
-            )
+                    }, idx + 1)
+                  ),
+                  React.createElement("h4", {
+                    style: {
+                      fontSize: '1.125rem',
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      marginBottom: '4px'
+                    }
+                  }, item.title),
+                  React.createElement("p", {
+                    style: {
+                      color: '#4b5563',
+                      fontSize: '0.875rem'
+                    }
+                  }, item.desc)
+                ]),
+                idx < arr.length - 1 &&
+                  React.createElement(Lucide.ArrowRight, {
+                    key: `arrow-${idx}`,
+                    size: 24,
+                    color: '#9ca3af'
+                  })
+              ])
+            )))
+          ]),
+
+          // Images side by side with template styles
+          React.createElement("div", {
+            style: {
+            //   backgroundColor: '#1e1b2c',
+              padding: '12px',
+              borderRadius: '6px',
+              overflow: 'hidden',
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              maxHeight: '30vh' // Limit height to 60% of viewport height
+            }
+          }, [
+            React.createElement("img", {
+              src: "../pre.png",
+              alt: "Preprocessing Diagram",
+              style: {
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                height: 'auto',
+                display: 'block',
+                width: '45%' // Adjusts image width to 45% for side-by-side display
+              }
+            }),
+            React.createElement("img", {
+              src: "../recon.png",
+              alt: "Reconstruction Diagram",
+              style: {
+                maxWidth: '100%',
+                maxHeight: '80%',
+                objectFit: 'contain',
+                height: 'auto',
+                display: 'block',
+                width: '45%' // Adjusts image width to 45% for side-by-side display
+              }
+            })
           ])
         ])
       },
@@ -543,80 +581,6 @@ const Presentation = () => {
           }, "Each step is optimized for efficient processing while maintaining high-quality output")
         ])
       },
-//     {
-//       title: "Processing Pipeline - Preprocessing",
-//       icon: createIcon(Lucide.Filter),
-//       content: React.createElement("div", {
-//         style: {
-//           display: 'flex',
-//           flexDirection: 'column',
-//           gap: '16px'
-//         }
-//       }, [
-//         React.createElement("div", {
-//           style: {
-//             display: 'grid',
-//             gridTemplateColumns: 'repeat(2, 1fr)',
-//             gap: '16px'
-//           }
-//         }, [
-//           React.createElement("div", {
-//             key: "steps",
-//             style: {
-//               padding: '16px',
-//               backgroundColor: '#eff6ff',
-//               borderRadius: '12px'
-//             }
-//         }, [
-//             React.createElement("h3", {
-//               style: {
-//                 fontSize: '1.25rem',
-//                 fontWeight: 'bold',
-//                 color: '#1d4ed8',
-//                 marginBottom: '12px'
-//             }
-//           }, "Preprocessing Steps"),
-//           React.createElement("div", {
-//             style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-//           }, [
-//             createListItem("1. Statistical outlier removal", "step1"),
-//             createListItem("2. Voxel-based downsampling", "step2"),
-//             createListItem("3. Normal vector estimation", "step3"),
-//             createListItem("4. Background plane removal (RANSAC)", "step4"),
-//             createListItem("5. Object clustering (DBSCAN)", "step5"),
-//             createListItem("6. Bottom surface reconstruction", "step6"),
-//             createListItem("7. Final point cloud optimization", "step7")
-//           ])
-//         ]),
-//         React.createElement("div", {
-//           key: "benefits",
-//           style: {
-//             padding: '16px',
-//             backgroundColor: '#faf5ff',
-//             borderRadius: '12px'
-//           }
-//         }, [
-//           React.createElement("h3", {
-//             style: {
-//               fontSize: '1.25rem',
-//               fontWeight: 'bold',
-//               color: '#7e22ce',
-//               marginBottom: '12px'
-//             }
-//           }, "Benefits"),
-//           React.createElement("div", {
-//             style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-//           }, [
-//             createListItem("Improved data quality", "benefit1"),
-//             createListItem("Reduced noise and artifacts", "benefit2"),
-//             createListItem("Better surface reconstruction", "benefit3"),
-//             createListItem("Optimized processing time", "benefit4"),
-//             createListItem("Enhanced final model accuracy", "benefit5")
-//           ])
-//         ])
-//       ])
-//     ])
-//   },
   {
     title: "Processing Pipeline - Reconstruction",
     icon: createIcon(Lucide.Boxes),
