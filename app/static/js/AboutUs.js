@@ -73,37 +73,11 @@ const Presentation = () => {
       content: React.createElement("div", {
         style: {
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '16px'
+          gridTemplateColumns: 'repeat(1, 1fr)',
+          gap: '16px',
+          marginTop: '64px'
         }
       }, [
-        React.createElement("div", {
-          key: "features",
-          style: {
-            padding: '16px',
-            backgroundColor: '#eff6ff',
-            borderRadius: '12px'
-          }
-        }, [
-          React.createElement("h3", {
-            style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#1d4ed8',
-              marginBottom: '12px'
-            }
-          }, "Key Features"),
-          React.createElement("div", {
-            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-          }, [
-            createListItem("Automated point cloud processing", "feat1"),
-            createListItem("Advanced mesh generation", "feat2"),
-            createListItem("Texture mapping and UV coordination", "feat3"),
-            createListItem("RESTful API integration", "feat4"),
-            createListItem("User-friendly web interface", "feat5"),
-            createListItem("Industry-standard OBJ output format", "feat6")
-          ])
-        ]),
         React.createElement("div", {
           key: "explanation",
           style: {
@@ -141,6 +115,7 @@ const Presentation = () => {
         ])
       ])
     },
+
     {
         title: "System Architecture",
         icon: createIcon(Lucide.Layers),
@@ -148,31 +123,30 @@ const Presentation = () => {
           style: {
             display: 'flex',
             flexDirection: 'column',
-            gap: '24px'
+            gap: '32px'
           }
         }, [
           // Architecture Image
           React.createElement("div", {
             style: {
-                backgroundColor: '#1e1b2c',
-                padding: '24px',
+                // backgroundColor: '#1e1b2c',
+                padding: '16px',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                maxHeight: '60vh',  // Limit height to 60% of viewport height
+                maxHeight: '30%',   // Limit height to avoid oversized images
             }
           }, [
             React.createElement("img", {
-              src: "../achi.png",
+              src: "../image.png",
               alt: "System Architecture Diagram",
               style: {
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                height: 'auto',
-                display: 'block',  // Removes any extra space below the image
+                width: '100%',      // Take full width
+                maxHeight: '75vh',   // Limit height to avoid oversized images
+                // objectFit: '',  // This ensures no cropping while maximizing size
+                display: 'block'
               }
             })
           ]),
@@ -229,10 +203,11 @@ const Presentation = () => {
               React.createElement("div", {
                 style: { display: 'flex', flexDirection: 'column', gap: '8px' }
               }, [
-                createListItem("Containerized Architecture", "feat1"),
+                createListItem("Containerized system", "feat1"),
                 createListItem("RESTful API Integration", "feat2"),
-                createListItem("Modular Service Design", "feat3"),
-                createListItem("Scalable Data Storage", "feat4")
+                createListItem("Microservices Architecture", "feat3"),
+                createListItem("Scalable Data Storage", "feat4"),
+                createListItem("Pipe and Filter & Open Model", "feat5")
               ])
             ])
           ])
@@ -245,7 +220,8 @@ const Presentation = () => {
         style: {
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '16px'
+          gap: '16px',
+          marginTop: '64px'
         }
       }, [
         React.createElement("div", {
@@ -415,7 +391,7 @@ const Presentation = () => {
               display: 'flex',
               justifyContent: 'space-around',
               alignItems: 'center',
-              maxHeight: '30vh' // Limit height to 60% of viewport height
+            //   maxHeight: '30vh' // Limit height to 60% of viewport height
             }
           }, [
             React.createElement("img", {
@@ -647,99 +623,7 @@ const Presentation = () => {
       ])
     ])
   },
-  {
-    title: "System Demo",
-    icon: createIcon(Lucide.Monitor),
-    content: React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-      }
-    }, [
-      React.createElement("div", {
-        key: "demo-stages",
-        style: {
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '16px'
-        }
-      }, [
-        React.createElement("div", {
-          key: "input-stage",
-          style: {
-            padding: '16px',
-            backgroundColor: '#eff6ff',
-            borderRadius: '12px'
-          }
-        }, [
-          React.createElement("h3", {
-            style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#1d4ed8',
-              marginBottom: '12px'
-            }
-          }, "Input Stage"),
-          React.createElement("div", {
-            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-          }, [
-            createListItem("LIDAR scan upload", "in1"),
-            createListItem("Format validation", "in2"),
-            createListItem("Initial visualization", "in3")
-          ])
-        ]),
-        React.createElement("div", {
-          key: "processing-stage",
-          style: {
-            padding: '16px',
-            backgroundColor: '#faf5ff',
-            borderRadius: '12px'
-          }
-        }, [
-          React.createElement("h3", {
-            style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#7e22ce',
-              marginBottom: '12px'
-            }
-          }, "Processing Stage"),
-          React.createElement("div", {
-            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-          }, [
-            createListItem("Progress tracking", "proc1"),
-            createListItem("Real-time updates", "proc2"),
-            createListItem("Status indicators", "proc3")
-          ])
-        ]),
-        React.createElement("div", {
-          key: "output-stage",
-          style: {
-            padding: '16px',
-            backgroundColor: '#f0fdf4',
-            borderRadius: '12px'
-          }
-        }, [
-          React.createElement("h3", {
-            style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#15803d',
-              marginBottom: '12px'
-            }
-          }, "Output Stage"),
-          React.createElement("div", {
-            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-          }, [
-            createListItem("3D model preview", "out1"),
-            createListItem("Export options", "out2"),
-            createListItem("Quality validation", "out3")
-          ])
-        ])
-      ])
-    ])
-  },
+
   {
     title: "Test Results",
     icon: createIcon(Lucide.BarChart),
@@ -747,9 +631,7 @@ const Presentation = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
-        alignItems: 'center',  // Center all sections
-        width: '100%'
+        gap: '16px'
       }
     }, [
       // Test Environment Section
@@ -762,8 +644,6 @@ const Presentation = () => {
           padding: '12px',
           backgroundColor: '#eff6ff',
           borderRadius: '12px',
-          width: '100%',
-          maxWidth: '800px'  // Ensures the same width as middle section
         }
       }, [
         React.createElement("div", { key: "env-info" }, [
@@ -800,8 +680,6 @@ const Presentation = () => {
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '12px',
-          width: '100%',
-          maxWidth: '800px'  // Ensures consistent width
         }
       }, [
         React.createElement("div", {
@@ -925,8 +803,6 @@ const Presentation = () => {
           padding: '12px',
           backgroundColor: '#f0fdf4',
           borderRadius: '12px',
-          width: '100%',
-          maxWidth: '800px'  // Ensures the same width as other sections
         }
       }, [
         React.createElement("div", { key: "strengths" }, [
@@ -956,6 +832,44 @@ const Presentation = () => {
       ])
     ])
   },
+
+  {
+    title: "System Demo",
+    icon: createIcon(Lucide.Monitor),
+    content: React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }
+    }, [
+
+      // Demo Image
+      React.createElement("div", {
+        style: {
+          padding: '24px',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }
+      }, [
+        React.createElement("img", {
+          src: "../DEMO_AALL.png",
+          alt: "System Demo Image",
+          style: {
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            height: 'auto',
+            display: 'block' // Removes any extra space below the image
+          }
+        })
+      ])
+    ])
+  },
+
   {
     title: "Key Achievements",
     icon: createIcon(Lucide.Trophy),
@@ -963,7 +877,8 @@ const Presentation = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '16px',
+        marginTop: '64px'
       }
     }, [
       React.createElement("div", {
@@ -1034,7 +949,8 @@ const Presentation = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '16px',
+        marginTop: '64px'
       }
     }, [
       React.createElement("div", {
@@ -1104,7 +1020,8 @@ const Presentation = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '16px',
+        marginTop: '64px'
       }
     }, [
       React.createElement("div", {
@@ -1197,7 +1114,8 @@ const Presentation = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '16px',
+        marginTop: '64px'
       }
     }, [
       React.createElement("div", {
@@ -1389,7 +1307,7 @@ const nextSlide = () => {
       React.createElement("div", {
         key: "content",
         style: {
-          height: '800px',
+          height: '1000px',
           display: 'flex',
           flexDirection: 'column'
         }
