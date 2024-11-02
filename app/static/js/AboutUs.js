@@ -142,154 +142,103 @@ const Presentation = () => {
       ])
     },
     {
-      title: "System Architecture",
-      icon: createIcon(Lucide.Layers),
-      content: React.createElement("div", {
-        style: {
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px'
-        }
-      }, [
-        React.createElement("div", {
-          key: "architecture-diagram",
+        title: "System Architecture",
+        icon: createIcon(Lucide.Layers),
+        content: React.createElement("div", {
           style: {
-            padding: '20px',
-            backgroundColor: '#f8fafc',
-            borderRadius: '12px'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px'
           }
         }, [
-          React.createElement("h3", {
+          // Architecture Image
+          React.createElement("div", {
             style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '16px',
-              textAlign: 'center'
+                backgroundColor: '#1e1b2c',
+                padding: '24px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                maxHeight: '60vh',  // Limit height to 60% of viewport height
             }
-          }, "Core Components"),
+          }, [
+            React.createElement("img", {
+            //   src: "/js/achi.png/1200/600",
+              src: "../achi.png",
+              alt: "System Architecture Diagram",
+              style: {
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                height: 'auto',
+                display: 'block',  // Removes any extra space below the image
+              }
+            })
+          ]),
+
+          // Component descriptions below the image
           React.createElement("div", {
             style: {
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px'
             }
           }, [
-            ["User Interface", "Web-based interface, API access"],
-            ["Services Layer", "PreprocessService, ReconstructionService, VisualsService"],
-            ["Data Layer", "MongoDB, File Storage"]
-          ].map(([title, desc], idx) =>
             React.createElement("div", {
-              key: `component-${idx}`,
+              key: "layers",
               style: {
                 padding: '16px',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                textAlign: 'center'
+                backgroundColor: '#eff6ff',
+                borderRadius: '12px'
               }
             }, [
-              React.createElement("h4", {
+              React.createElement("h3", {
                 style: {
-                  fontSize: '1.125rem',
+                  fontSize: '1.25rem',
                   fontWeight: 'bold',
-                  color: '#3b82f6',
-                  marginBottom: '8px'
+                  color: '#1d4ed8',
+                  marginBottom: '12px'
                 }
-              }, title),
-              React.createElement("p", {
-                style: {
-                  color: '#4b5563'
-                }
-              }, desc)
-            ]))
-          )
-        ]),
-        React.createElement("div", {
-          key: "data-flow",
-          style: {
-            padding: '20px',
-            backgroundColor: '#eff6ff',
-            borderRadius: '12px'
-          }
-        }, [
-          React.createElement("h3", {
-            style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }
-          }, "Data Flow"),
-          React.createElement("div", {
-            style: {
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '0 32px'
-            }
-          }, [
-            React.createElement("div", {
-              style: {
-                textAlign: 'center'
-              }
-            }, [
-              React.createElement(Lucide.Upload, {
-                size: 32,
-                color: '#3b82f6'
-              }),
-              React.createElement("p", {
-                style: {
-                  marginTop: '8px',
-                  color: '#4b5563'
-                }
-              }, "Input")
+              }, "Core Layers"),
+              React.createElement("div", {
+                style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+              }, [
+                createListItem("User Interface Layer (Web & API)", "layer1"),
+                createListItem("Services Layer (Processing Pipeline)", "layer2"),
+                createListItem("Logic Layer (Algorithms)", "layer3"),
+                createListItem("Models Layer (Data Store)", "layer4")
+              ])
             ]),
-            React.createElement(Lucide.ArrowRight, {
-              size: 24,
-              color: '#9ca3af'
-            }),
             React.createElement("div", {
+              key: "features",
               style: {
-                textAlign: 'center'
+                padding: '16px',
+                backgroundColor: '#faf5ff',
+                borderRadius: '12px'
               }
             }, [
-              React.createElement(Lucide.Cog, {
-                size: 32,
-                color: '#3b82f6'
-              }),
-              React.createElement("p", {
+              React.createElement("h3", {
                 style: {
-                  marginTop: '8px',
-                  color: '#4b5563'
+                  fontSize: '1.25rem',
+                  fontWeight: 'bold',
+                  color: '#7e22ce',
+                  marginBottom: '12px'
                 }
-              }, "Processing")
-            ]),
-            React.createElement(Lucide.ArrowRight, {
-              size: 24,
-              color: '#9ca3af'
-            }),
-            React.createElement("div", {
-              style: {
-                textAlign: 'center'
-              }
-            }, [
-              React.createElement(Lucide.Box, {
-                size: 32,
-                color: '#3b82f6'
-              }),
-              React.createElement("p", {
-                style: {
-                  marginTop: '8px',
-                  color: '#4b5563'
-                }
-              }, "Output")
+              }, "Key Features"),
+              React.createElement("div", {
+                style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+              }, [
+                createListItem("Containerized Architecture", "feat1"),
+                createListItem("RESTful API Integration", "feat2"),
+                createListItem("Modular Service Design", "feat3"),
+                createListItem("Scalable Data Storage", "feat4")
+              ])
             ])
           ])
         ])
-      ])
-    },
+      },
     {
       title: "Technical Stack",
       icon: createIcon(Lucide.Code),
@@ -458,17 +407,10 @@ const Presentation = () => {
           ])
         ])
       },
-    {
-      title: "Processing Pipeline - Preprocessing",
-      icon: createIcon(Lucide.Filter),
-      content: React.createElement("div", {
-        style: {
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px'
-        }
-      }, [
-        React.createElement("div", {
+      {
+        title: "Pipeline - Preprocessing",
+        icon: createIcon(Lucide.Settings),
+        content: React.createElement("div", {
           style: {
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
@@ -476,62 +418,205 @@ const Presentation = () => {
           }
         }, [
           React.createElement("div", {
-            key: "steps",
+            key: "outlier-removal",
             style: {
               padding: '16px',
               backgroundColor: '#eff6ff',
               borderRadius: '12px'
             }
-        }, [
+          }, [
             React.createElement("h3", {
               style: {
                 fontSize: '1.25rem',
                 fontWeight: 'bold',
                 color: '#1d4ed8',
                 marginBottom: '12px'
-            }
-          }, "Preprocessing Steps"),
+              }
+            }, "Remove Statistical Outliers"),
+            createListItem("Removes noise and outlier points", "out1"),
+            createListItem("Uses nearest neighbor statistics", "out2")
+          ]),
           React.createElement("div", {
-            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-          }, [
-            createListItem("1. Statistical outlier removal", "step1"),
-            createListItem("2. Voxel-based downsampling", "step2"),
-            createListItem("3. Normal vector estimation", "step3"),
-            createListItem("4. Background plane removal (RANSAC)", "step4"),
-            createListItem("5. Object clustering (DBSCAN)", "step5"),
-            createListItem("6. Bottom surface reconstruction", "step6"),
-            createListItem("7. Final point cloud optimization", "step7")
-          ])
-        ]),
-        React.createElement("div", {
-          key: "benefits",
-          style: {
-            padding: '16px',
-            backgroundColor: '#faf5ff',
-            borderRadius: '12px'
-          }
-        }, [
-          React.createElement("h3", {
+            key: "downsampling",
             style: {
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#7e22ce',
-              marginBottom: '12px'
+              padding: '16px',
+              backgroundColor: '#faf5ff',
+              borderRadius: '12px'
             }
-          }, "Benefits"),
-          React.createElement("div", {
-            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
           }, [
-            createListItem("Improved data quality", "benefit1"),
-            createListItem("Reduced noise and artifacts", "benefit2"),
-            createListItem("Better surface reconstruction", "benefit3"),
-            createListItem("Optimized processing time", "benefit4"),
-            createListItem("Enhanced final model accuracy", "benefit5")
-          ])
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#7e22ce',
+                marginBottom: '12px'
+              }
+            }, "Voxel Downsampling"),
+            createListItem("Reduces point cloud density uniformly", "down1"),
+            createListItem("Improves processing speed and memory", "down2")
+          ]),
+          React.createElement("div", {
+            key: "normal-estimation",
+            style: {
+              padding: '16px',
+              backgroundColor: '#f0fdf4',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#15803d',
+                marginBottom: '12px'
+              }
+            }, "Estimate Normals"),
+            createListItem("Calculates surface normals for each point", "normal1"),
+            createListItem("Important for surface reconstruction", "normal2")
+          ]),
+          React.createElement("div", {
+            key: "segmentation",
+            style: {
+              padding: '16px',
+              backgroundColor: '#fee2e2',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#dc2626',
+                marginBottom: '12px'
+              }
+            }, "Plane Segmentation"),
+            createListItem("Removes background using RANSAC", "seg1"),
+            createListItem("Isolates the main object", "seg2")
+          ]),
+          React.createElement("div", {
+            key: "clustering",
+            style: {
+              padding: '16px',
+              backgroundColor: '#ffedd5',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#d97706',
+                marginBottom: '12px'
+              }
+            }, "DBSCAN Clustering"),
+            createListItem("Groups points into clusters", "clust1"),
+            createListItem("Identifies and extracts main object", "clust2")
+          ]),
+          React.createElement("div", {
+            key: "bottom-completion",
+            style: {
+              padding: '16px',
+              backgroundColor: '#dbeafe',
+              borderRadius: '12px'
+            }
+          }, [
+            React.createElement("h3", {
+              style: {
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                color: '#2563eb',
+                marginBottom: '12px'
+              }
+            }, "Bottom Completion"),
+            createListItem("Creates complete bottom surface", "comp1"),
+            createListItem("Uses convex hull and surface sampling", "comp2")
+          ]),
+          React.createElement("div", {
+            key: "optimization",
+            style: {
+              gridColumn: 'span 2',
+              textAlign: 'center',
+              color: '#6b7280',
+              fontStyle: 'italic',
+              marginTop: '16px'
+            }
+          }, "Each step is optimized for efficient processing while maintaining high-quality output")
         ])
-      ])
-    ])
-  },
+      },
+//     {
+//       title: "Processing Pipeline - Preprocessing",
+//       icon: createIcon(Lucide.Filter),
+//       content: React.createElement("div", {
+//         style: {
+//           display: 'flex',
+//           flexDirection: 'column',
+//           gap: '16px'
+//         }
+//       }, [
+//         React.createElement("div", {
+//           style: {
+//             display: 'grid',
+//             gridTemplateColumns: 'repeat(2, 1fr)',
+//             gap: '16px'
+//           }
+//         }, [
+//           React.createElement("div", {
+//             key: "steps",
+//             style: {
+//               padding: '16px',
+//               backgroundColor: '#eff6ff',
+//               borderRadius: '12px'
+//             }
+//         }, [
+//             React.createElement("h3", {
+//               style: {
+//                 fontSize: '1.25rem',
+//                 fontWeight: 'bold',
+//                 color: '#1d4ed8',
+//                 marginBottom: '12px'
+//             }
+//           }, "Preprocessing Steps"),
+//           React.createElement("div", {
+//             style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+//           }, [
+//             createListItem("1. Statistical outlier removal", "step1"),
+//             createListItem("2. Voxel-based downsampling", "step2"),
+//             createListItem("3. Normal vector estimation", "step3"),
+//             createListItem("4. Background plane removal (RANSAC)", "step4"),
+//             createListItem("5. Object clustering (DBSCAN)", "step5"),
+//             createListItem("6. Bottom surface reconstruction", "step6"),
+//             createListItem("7. Final point cloud optimization", "step7")
+//           ])
+//         ]),
+//         React.createElement("div", {
+//           key: "benefits",
+//           style: {
+//             padding: '16px',
+//             backgroundColor: '#faf5ff',
+//             borderRadius: '12px'
+//           }
+//         }, [
+//           React.createElement("h3", {
+//             style: {
+//               fontSize: '1.25rem',
+//               fontWeight: 'bold',
+//               color: '#7e22ce',
+//               marginBottom: '12px'
+//             }
+//           }, "Benefits"),
+//           React.createElement("div", {
+//             style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+//           }, [
+//             createListItem("Improved data quality", "benefit1"),
+//             createListItem("Reduced noise and artifacts", "benefit2"),
+//             createListItem("Better surface reconstruction", "benefit3"),
+//             createListItem("Optimized processing time", "benefit4"),
+//             createListItem("Enhanced final model accuracy", "benefit5")
+//           ])
+//         ])
+//       ])
+//     ])
+//   },
   {
     title: "Processing Pipeline - Reconstruction",
     icon: createIcon(Lucide.Boxes),
@@ -698,21 +783,67 @@ const Presentation = () => {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '12px',
+        alignItems: 'center',  // Center all sections
+        width: '100%'
       }
     }, [
+      // Test Environment Section
+      React.createElement("div", {
+        key: "test-environment",
+        style: {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px',
+          padding: '12px',
+          backgroundColor: '#eff6ff',
+          borderRadius: '12px',
+          width: '100%',
+          maxWidth: '800px'  // Ensures the same width as middle section
+        }
+      }, [
+        React.createElement("div", { key: "env-info" }, [
+          React.createElement("h3", {
+            style: {
+              fontSize: '1rem',  // Smaller font size
+              fontWeight: 'bold',
+              color: '#1d4ed8',
+              marginBottom: '6px'
+            }
+          }, "Test Environment"),
+          createListItem("iPad Pro LIDAR Scanner", "env1"),
+          createListItem("6 household objects tested", "env2")
+        ]),
+        React.createElement("div", { key: "reconstruction-times" }, [
+          React.createElement("h3", {
+            style: {
+              fontSize: '1rem',  // Smaller font size
+              fontWeight: 'bold',
+              color: '#1d4ed8',
+              marginBottom: '6px'
+            }
+          }, "Success Rates"),
+          createListItem("File Upload: 100%", "rate1"),
+          createListItem("Preprocessing: 89%", "rate2"),
+          createListItem("Reconstruction: 89%", "rate3")
+        ])
+      ]),
+
+      // Performance Metrics Section
       React.createElement("div", {
         key: "performance-metrics",
         style: {
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '16px'
+          gap: '12px',
+          width: '100%',
+          maxWidth: '800px'  // Ensures consistent width
         }
       }, [
         React.createElement("div", {
           key: "small-files",
           style: {
-            padding: '16px',
+            padding: '12px',
             backgroundColor: '#eff6ff',
             borderRadius: '12px',
             textAlign: 'center'
@@ -720,34 +851,35 @@ const Presentation = () => {
         }, [
           React.createElement("h3", {
             style: {
-              fontSize: '1.25rem',
+              fontSize: '1rem',  // Smaller font size
               fontWeight: 'bold',
               color: '#1d4ed8',
-              marginBottom: '8px'
+              marginBottom: '6px'
             }
           }, "Small Files"),
           React.createElement("p", {
             style: {
-              fontSize: '1rem',
+              fontSize: '0.875rem',  // Smaller font size
               color: '#4b5563',
-              marginBottom: '8px'
+              marginBottom: '6px'
             }
           }, "200k-400k points"),
           React.createElement("div", {
             style: {
-              fontSize: '1.5rem',
+              fontSize: '1.25rem',  // Smaller font size
               fontWeight: 'bold',
-              color: '#1d4ed8'
+              color: '#1d4ed8',
+              lineHeight: '1.2'  // Reduced line spacing
             }
           }, [
-            React.createElement("p", null, "4s"),
-            React.createElement("p", null, "95% success")
+            React.createElement("p", null, "Preprocess: 2.1s"),
+            React.createElement("p", null, "Reconstruction: 1.8s")
           ])
         ]),
         React.createElement("div", {
           key: "medium-files",
           style: {
-            padding: '16px',
+            padding: '12px',
             backgroundColor: '#faf5ff',
             borderRadius: '12px',
             textAlign: 'center'
@@ -755,34 +887,35 @@ const Presentation = () => {
         }, [
           React.createElement("h3", {
             style: {
-              fontSize: '1.25rem',
+              fontSize: '1rem',  // Smaller font size
               fontWeight: 'bold',
               color: '#7e22ce',
-              marginBottom: '8px'
+              marginBottom: '6px'
             }
           }, "Medium Files"),
           React.createElement("p", {
             style: {
-              fontSize: '1rem',
+              fontSize: '0.875rem',  // Smaller font size
               color: '#4b5563',
-              marginBottom: '8px'
+              marginBottom: '6px'
             }
           }, "400k-1M points"),
           React.createElement("div", {
             style: {
-              fontSize: '1.5rem',
+              fontSize: '1.25rem',  // Smaller font size
               fontWeight: 'bold',
-              color: '#7e22ce'
+              color: '#7e22ce',
+              lineHeight: '1.2'  // Reduced line spacing
             }
           }, [
-            React.createElement("p", null, "14s"),
-            React.createElement("p", null, "90% success")
+            React.createElement("p", null, "Preprocess: 6s"),
+            React.createElement("p", null, "Reconstruction: 7.1s")
           ])
         ]),
         React.createElement("div", {
           key: "large-files",
           style: {
-            padding: '16px',
+            padding: '12px',
             backgroundColor: '#f0fdf4',
             borderRadius: '12px',
             textAlign: 'center'
@@ -790,29 +923,71 @@ const Presentation = () => {
         }, [
           React.createElement("h3", {
             style: {
-              fontSize: '1.25rem',
+              fontSize: '1rem',  // Smaller font size
               fontWeight: 'bold',
               color: '#15803d',
-              marginBottom: '8px'
+              marginBottom: '6px'
             }
           }, "Large Files"),
           React.createElement("p", {
             style: {
-              fontSize: '1rem',
+              fontSize: '0.875rem',  // Smaller font size
               color: '#4b5563',
-              marginBottom: '8px'
+              marginBottom: '6px'
             }
           }, "1M-3M points"),
           React.createElement("div", {
             style: {
-              fontSize: '1.5rem',
+              fontSize: '1.25rem',  // Smaller font size
               fontWeight: 'bold',
-              color: '#15803d'
+              color: '#15803d',
+              lineHeight: '1.2'  // Reduced line spacing
             }
           }, [
-            React.createElement("p", null, "25s"),
-            React.createElement("p", null, "86% success")
+            React.createElement("p", null, "Preprocess: 12.5s"),
+            React.createElement("p", null, "Reconstruction: 12.4s")
           ])
+        ])
+      ]),
+
+      // Strengths and Improvements Section
+      React.createElement("div", {
+        key: "strengths-improvements",
+        style: {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px',
+          marginTop: '12px',
+          padding: '12px',
+          backgroundColor: '#f0fdf4',
+          borderRadius: '12px',
+          width: '100%',
+          maxWidth: '800px'  // Ensures the same width as other sections
+        }
+      }, [
+        React.createElement("div", { key: "strengths" }, [
+          React.createElement("h3", {
+            style: {
+              fontSize: '1rem',  // Smaller font size
+              fontWeight: 'bold',
+              color: '#15803d',
+              marginBottom: '6px'
+            }
+          }, "Key Strengths"),
+          createListItem("Fast processing: 4-25s total time", "strength1"),
+          createListItem("High accuracy for small/medium files", "strength2")
+        ]),
+        React.createElement("div", { key: "improvements" }, [
+          React.createElement("h3", {
+            style: {
+              fontSize: '1rem',  // Smaller font size
+              fontWeight: 'bold',
+              color: '#15803d',
+              marginBottom: '6px'
+            }
+          }, "Future Improvements"),
+          createListItem("Thin object handling", "improvement1"),
+          createListItem("Complex geometry processing", "improvement2")
         ])
       ])
     ])
